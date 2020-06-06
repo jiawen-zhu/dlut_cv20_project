@@ -37,21 +37,17 @@ def match_features(features1, features2, x1, y1, x2, y2):
     # TODO: YOUR CODE HERE                                                        #
     #############################################################################
 
-    n = features1.shape[0]
-    m = features2.shape[0]
-    dis = np.zeros((n,m))
-    matches = np.zeros((n,2))
-    for i in range(n):
-        for j in range(m):
+    dis = np.zeros((features1.shape[0],features2.shape[0]))
+    for i in range(features1.shape[0]):
+        for j in range(features2.shape[0]):
             dis[i,j] = np.linalg.norm(features1[i] - features2[j])
-    matches[:,0] = np.arange(n)
-    matches[:,1] = dis.argmin(axis=1)
+    matches = np.zeros((features1.shape[0], 2))
+    matches[:,0], matches[:,1]  = np.arange(features1.shape[0]), dis.argmin(axis=1)
     dis.sort(axis=1)
-    confidences = dis[:,0]/dis[:,1]
-    sort = np.argsort(confidences)
+    confidences = 1 - dis[:,0]/dis[:,1]
+    sort = np.argsort(1 - confidences)
     matches = matches[sort,:]
-    matches = matches.astype('int64')
-    confidences = 1 - confidences
+
 
     # raise NotImplementedError('`match_features` function in ' +
     #     '`student_feature_matching.py` needs to be implemented')
@@ -59,4 +55,4 @@ def match_features(features1, features2, x1, y1, x2, y2):
     #############################################################################
     #                             END OF YOUR CODE                              #
     #############################################################################
-    return matches, confidences
+    return matches.astype('int64'), confidences
