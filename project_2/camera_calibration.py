@@ -27,8 +27,8 @@ def camera_calibration(pt_3d, matches):
         x = pt_3d[n,0]
         y = pt_3d[n,1]
         z = pt_3d[n,2]
-        u = pt_3d[n,0]
-        v = pt_3d[n,1]
+        u = matches[n,0]
+        v = matches[n,1]
         a.append([x,y,z,1,0,0,0,0, -u*x, -u*y, -u*z])
         b.append([u])
         a.append([0,0,0,0,x,y,z,1, -v*x, -v*y, -v*z])
