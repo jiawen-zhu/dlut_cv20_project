@@ -40,7 +40,7 @@ def plot_fundamental(ax, F, pt_2d, if_pt2):
         if if_pt2:line_homogeneous = np.dot(F.T, p_i)
         else:line_homogeneous = np.dot(F, p_i)
         y = -line_homogeneous[2] / line_homogeneous[1]
-        x = (-line_homogeneous[2]) / line_homogeneous[0] / line_homogeneous[0]
+        x = (-line_homogeneous[2]) / line_homogeneous[0]
         x1, y2 = 0, 0
         if x < 0:
             y2 = 712
