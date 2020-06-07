@@ -44,16 +44,14 @@ pt2_2d = matches[:, 2:] #points location in lab2
 # Plot epipolar lines in image I2
 fig, ax = plt.subplots()
 # ax.set_aspect('equal')
-if_pt2 =True
-ax = F_matrix.plot_fundamental(ax, F, pt1_2d, if_pt2) # <YOUR CODE>
+ax = F_matrix.plot_fundamental(ax, F, pt1_2d, True) # <YOUR CODE>
 ax.plot(matches[:,2],matches[:,3],  '+r')
 ax.imshow(np.array(I2).astype(np.uint8))
 plt.show()
 
 # Plot epipolar lines in image I1
 fig, ax = plt.subplots()
-if_pt2 =False
-ax = F_matrix.plot_fundamental(ax, F, pt2_2d, if_pt2) # <YOUR CODE>
+ax = F_matrix.plot_fundamental(ax, F, pt2_2d, False) # <YOUR CODE>
 ax.plot(matches[:,0],matches[:,1],  '+r')
 ax.imshow(np.array(I1).astype(np.uint8))
 plt.show()
