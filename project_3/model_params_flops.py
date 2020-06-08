@@ -16,8 +16,8 @@ def model_params_flops(arch):
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser(description='Evaluate the parameters and FLOPs of model')
-    parser.add_argument('--arch', '-a', metavar='ARCH', default='AlexNet_BN',
-                        help='model architecture: AlexNet')
+    parser.add_argument('--arch', '-a', metavar='ARCH', default='vovnet27_slim',
+                        help='model architecture')
     global args
     args = parser.parse_args()
     model_params_flops(args.arch)

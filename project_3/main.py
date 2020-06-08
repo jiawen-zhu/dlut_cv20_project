@@ -9,41 +9,49 @@ import torch.optim as optim
 import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
 
-
 import torchvision
 import torchvision.transforms as transforms
 
 from models import *
 from imagenet100_32X32 import *
 from functions import *
+from label_smooth import *
 from image_preprocess import *
 from model_params_flops import *
-
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet100_32*32 Training')
 parser.add_argument('--data', default='./data', type=str, metavar='N',
                     help='root directory of dataset where directory train_data or val_data exists')
 parser.add_argument('--result', default='./Results',
                     type=str, metavar='N', help='root directory of results')
-parser.add_argument('--arch', '-a', metavar='ARCH', default='AlexNet_BN',
-                    help='model architecture: AlexNet_BN')
+parser.add_argument('--arch', '-a', metavar='ARCH', default='vovnet27_slim',
+                    help='model architecture')
+# AlexNet_BN PeleeNet HBONet vovnet27_slim ghost_net
 parser.add_argument('--num-classes', default=100, type=int, help='define the number of classes')
 parser.add_argument('--epochs', default=160, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('-b', '--batch-size', default=128, type=int, metavar='N',
                     help='mini-batch size (default: 128), used for train and validation')
+# 128
 parser.add_argument('--lr', '--learning-rate', default=0.1, type=float, metavar='LR',
                     help='initial learning rate')
+# alex 0.1 pelee 0.18 pelee_adam 1e-4
 parser.add_argument('--optimizer', default='SGD', type=str, metavar='M', help='optimization method')
-parser.add_argument('--print-freq', '-p', default=10, type=int, metavar='N',
+# SGD0.1 Adam1e-3 RMSprop0.01
+parser.add_argument('--print-freq', '-p', default=20, type=int, metavar='N',
                     help='print frequency (default: 10)')
-parser.add_argument('--save-freq', '-sp', default=10, type=int, metavar='N',
+parser.add_argument('--save-freq', '-sp', default=20, type=int, metavar='N',
                     help='save checkpoint frequency (default: 10)')
-parser.add_argument('--resume', default='./Results/AlexNet_BN_lr_0.1/checkpoint_10.pth.tar',
+parser.add_argument('--resume', default='',
                     type=str, metavar='PATH', help='path to latest checkpoint (default: none)')
+# ./Results/AlexNet_BN_lr_0.1/checkpoint_10.pth.tar
 parser.add_argument('--cuda', default=torch.cuda.is_available(), type=bool, help='whether cuda is in use.')
-
+parser.add_argument('--adjust_lr', default='step_decrease', type=str, help='way to adjust lr')
+# step_decrease cosine warm_up
+parser.add_argument('--label_smooth', default=False, action='store_true', help='label_smooth')
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 best_prec1 = 0
+
 
 def main():
     global args, best_prec1
@@ -86,7 +94,11 @@ def main():
     if args.cuda:
         print('GPU mode! ')
         model = nn.DataParallel(model).cuda()
-        criterion = criterion.cuda()
+        if args.label_smooth:
+            criterion = LabelSmoothing(smoothing=0.1).cuda()
+            print('label smooth!')
+        else:
+            criterion = criterion.cuda()
         cudnn.benchmark = True
     else:
         print('CPU mode! Cuda is not available!')
@@ -94,11 +106,10 @@ def main():
     # define optimizer
     if args.optimizer == 'SGD':
         optimizer = optim.SGD(model.parameters(), args.lr, momentum=0.9, weight_decay=1e-4)
-    elif args.optimizer == 'custom':
-        """
-            You can achieve your own optimizer here
-        """
-        pass
+    elif args.optimizer == 'Adam':
+        optimizer = optim.Adam(model.parameters(), args.lr)
+    elif args.optimizer == 'RMSprop':
+        optimizer = optim.RMSprop(model.parameters(), args.lr, alpha=0.9)
     else:
         raise KeyError('optimization method {} is not achieved')
 
@@ -124,7 +135,8 @@ def main():
 
     stats_ = stats(args.result, args.start_epoch)
     for epoch in range(args.start_epoch, args.epochs):
-        adjust_learning_rate(optimizer, epoch)
+        adjust_learning_rate(optimizer, epoch, iterations_per_epoch=len(train_loader),
+                             iteration=epoch * len(train_loader))
         print('learning rate:{}'.format(optimizer.param_groups[0]['lr']))
         # train for one epoch
         trainObj, top1, top5 = train(train_loader, model, criterion, optimizer, epoch)
@@ -144,15 +156,14 @@ def main():
                 'best_prec1': best_prec1,
                 'optimizer': optimizer.state_dict()}
         save_checkpoint(stat, is_best, filename)
-        if int(epoch+1) % args.save_freq == 0:
+        if int(epoch + 1) % args.save_freq == 0:
             print("=> save checkpoint_{}.pth.tar'".format(int(epoch + 1)))
             save_checkpoint(stat, False,
                             [os.path.join(args.result, 'checkpoint_{}.pth.tar'.format(int(epoch + 1)))])
-        #plot curve
+        # plot curve
         plot_curve(stats_, args.result, True)
         data = stats_
         sio.savemat(os.path.join(args.result, 'stats.mat'), {'data': data})
-
 
 
 def train(train_loader, model, criterion, optimizer, epoch):
@@ -170,7 +181,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
         # measure data loading time
         data_time.update(time.time() - end)
 
-        if args.cuda :
+        if args.cuda:
             input = input.cuda(non_blocking=True)
             target = target.cuda(non_blocking=True)
 
@@ -200,8 +211,8 @@ def train(train_loader, model, criterion, optimizer, epoch):
                   'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
                   'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'
                   'Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
-                   epoch, i, len(train_loader), batch_time=batch_time,
-                   data_time=data_time, loss=losses, top1=top1, top5=top5))
+                epoch, i, len(train_loader), batch_time=batch_time,
+                data_time=data_time, loss=losses, top1=top1, top5=top5))
     return losses.avg, top1.avg, top5.avg
 
 
@@ -241,16 +252,18 @@ def validate(val_loader, model, criterion):
                       'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
                       'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'
                       'Prec@5 {top1.val:.3f} ({top5.avg:.3f})'.format(
-                       i, len(val_loader), batch_time=batch_time, loss=losses,
-                       top1=top1, top5=top5))
+                    i, len(val_loader), batch_time=batch_time, loss=losses,
+                    top1=top1, top5=top5))
 
         print(' * Prec@1 {top1.avg:.3f} Prec@5 {top5.avg:.3f}'
               .format(top1=top1, top5=top5))
 
     return losses.avg, top1.avg, top5.avg
 
+
 class AverageMeter(object):
     """Computes and stores the average and current value"""
+
     def __init__(self):
         self.reset()
 
@@ -286,18 +299,41 @@ def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
         shutil.copyfile(filename[0], filename[1])
 
 
-def adjust_learning_rate(optimizer, epoch):
+def adjust_learning_rate(optimizer, epoch, iterations_per_epoch=None, iteration=None):
     """
      For AlexNet, the lr starts from 0.05, and is divided by 10 at 90 and 120 epochs
     """
-    if epoch < 90:
-        lr = args.lr
-    elif epoch < 120:
-        lr = args.lr * 0.1
-    else:
-        lr = args.lr * 0.01
-    for param_group in optimizer.param_groups:
-        param_group['lr'] = lr
+    if args.adjust_lr == 'step_decrease':
+        print(args.adjust_lr + ' learn rate policy ')
+        if epoch < 90:
+            lr = args.lr
+        elif epoch < 120:
+            lr = args.lr * 0.1
+        else:
+            lr = args.lr * 0.01
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = lr
+    elif args.adjust_lr == 'cosine':
+        print(args.adjust_lr + ' learn rate policy ')
+        T_total = args.epochs * iterations_per_epoch
+        T_cur = (epoch % args.epochs) * iterations_per_epoch + iteration
+        lr = 0.5 * args.lr * (1 + math.cos(math.pi * T_cur / T_total))
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = lr
+    elif args.adjust_lr == 'warm_up':
+        print(args.adjust_lr + ' learn rate policy ')
+        if epoch < 1:
+            lr = 0.01 * args.lr
+            print(' at warming up! ')
+        elif epoch < 90:
+            lr = args.lr
+        elif epoch < 120:
+            lr = args.lr * 0.1
+        else:
+            lr = args.lr * 0.01
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = lr
+
 
 def accuracy(output, target, topk=(1,)):
     """Computes the precision@k for the specified values of k"""
@@ -316,6 +352,5 @@ def accuracy(output, target, topk=(1,)):
         return res
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     main()
-
