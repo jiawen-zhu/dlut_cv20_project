@@ -17,8 +17,8 @@ CONFIG = {
         [3, 64, 3, 128, True],
         [3, 80, 3, 192, True],
 
-        #[3, 96, 3, 256, True],
-        #[3, 112, 3, 384, True],
+        [3, 96, 5, 192, False],
+        # [3, 96, 3, 192, False],
     ],
     "vovnet27_slim": [
         [3, 64, 5, 128, True],
@@ -159,19 +159,19 @@ class BasicConv2d(nn.Module):
 class GoogLeNetV4Stem(nn.Module):
     def __init__(self):
         super(GoogLeNetV4Stem, self).__init__()
-        self.conv1 = BasicConv2d(3, 32, kernel_size=3, stride=2, padding=0)
-        self.conv2 = BasicConv2d(32, 32, kernel_size=3, stride=1, padding=0)
-        self.conv3 = BasicConv2d(32, 64, kernel_size=3, stride=1, padding=1)
+        self.conv1 = BasicConv2d(3, 48, kernel_size=3, stride=1, padding=0)
+        self.conv2 = BasicConv2d(48, 48, kernel_size=3, stride=2, padding=0)
+        # self.conv3 = BasicConv2d(32, 64, kernel_size=3, stride=1, padding=1)
 
         # self.pool4_1 = nn.MaxPool2d(kernel_size=3, stride=2, padding=0)
-        self.conv4_2 = BasicConv2d(64, 64, kernel_size=3, stride=1, padding=1)
+        self.conv4_2 = BasicConv2d(48, 48, kernel_size=3, stride=1, padding=1)
 
-        self.conv5_1_1 = BasicConv2d(128, 48, kernel_size=1, stride=1, padding=0)
-        self.conv5_1_2 = BasicConv2d(48, 48, kernel_size=(3, 1), stride=1, padding=(1, 0))#7
+        # self.conv5_1_1 = BasicConv2d(128, 48, kernel_size=1, stride=1, padding=0)
+        self.conv5_1_2 = BasicConv2d(96, 48, kernel_size=(3, 1), stride=1, padding=(1, 0))#7
         self.conv5_1_3 = BasicConv2d(48, 48, kernel_size=(1, 3), stride=1, padding=(0, 1))#7
         self.conv5_1_4 = BasicConv2d(48, 48, kernel_size=(3, 3), stride=1, padding=0)
 
-        self.conv5_2_1 = BasicConv2d(128, 48, kernel_size=1, stride=1, padding=0)
+        self.conv5_2_1 = BasicConv2d(96, 48, kernel_size=1, stride=1, padding=0)
         self.conv5_2_2 = BasicConv2d(48, 48, kernel_size=3, stride=1, padding=0)
 
         # self.pool6_1 = nn.MaxPool2d(kernel_size=3, stride=2, padding=0)
@@ -182,7 +182,7 @@ class GoogLeNetV4Stem(nn.Module):
         # print x.shape
         x = self.conv2(x)
         # print x.shape
-        x = self.conv3(x)
+        # x = self.conv3(x)
         # print x.shape
 
         # x1 = self.pool4_1(x)
@@ -190,8 +190,8 @@ class GoogLeNetV4Stem(nn.Module):
         x2 = self.conv4_2(x)
         # print x2.shape
         x = torch.cat((x, x2), dim=1)
-        x1 = self.conv5_1_1(x)
-        x1 = self.conv5_1_2(x1)
+        # x1 = self.conv5_1_1(x)
+        x1 = self.conv5_1_2(x)
         x1 = self.conv5_1_3(x1)
         x1 = self.conv5_1_4(x1)
         # print x1.shape
