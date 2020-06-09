@@ -11,6 +11,7 @@ import torch.backends.cudnn as cudnn
 
 import torchvision
 import torchvision.transforms as transforms
+# from apex import amp
 
 from models import *
 from imagenet100_32X32 import *
@@ -72,7 +73,7 @@ def main():
     print('=> Building model...')
     modeltype = globals()[args.arch]
     model = modeltype(num_classes=args.num_classes)
-    print(model)
+    # print(model)
 
     # compute the parameters and FLOPs of model
     model_params_flops(args.arch)
@@ -96,8 +97,23 @@ def main():
         else:
             print("=> no checkpoint found at '{}'".format(args.resume))
 
+    # define optimizer
+    if args.optimizer == 'SGD':
+        optimizer = optim.SGD(model.parameters(), args.lr, momentum=0.9, weight_decay=1e-4)
+    elif args.optimizer == 'Adam':
+        optimizer = optim.Adam(model.parameters(), args.lr)
+    elif args.optimizer == 'RMSprop':
+        optimizer = optim.RMSprop(model.parameters(), args.lr, alpha=0.9)
+    else:
+        raise KeyError('optimization method {} is not achieved')
+
+
     if args.cuda:
         print('GPU mode! ')
+        ##########################################
+        # model = model.cuda()
+        # model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
+        ########################################
         model = nn.DataParallel(model).cuda()
         if args.label_smooth:
             criterion = LabelSmoothing(smoothing=0.1).cuda()
@@ -108,15 +124,11 @@ def main():
     else:
         print('CPU mode! Cuda is not available!')
 
-    # define optimizer
-    if args.optimizer == 'SGD':
-        optimizer = optim.SGD(model.parameters(), args.lr, momentum=0.9, weight_decay=1e-4)
-    elif args.optimizer == 'Adam':
-        optimizer = optim.Adam(model.parameters(), args.lr)
-    elif args.optimizer == 'RMSprop':
-        optimizer = optim.RMSprop(model.parameters(), args.lr, alpha=0.9)
-    else:
-        raise KeyError('optimization method {} is not achieved')
+
+
+    #############################
+
+
 
     if args.resume:
         if os.path.isfile(args.resume):
@@ -144,7 +156,9 @@ def main():
                              iteration=epoch * len(train_loader))
         print('learning rate:{}'.format(optimizer.param_groups[0]['lr']))
         # train for one epoch
+        tic = time.time()
         trainObj, top1, top5 = train(train_loader, model, criterion, optimizer, epoch)
+        print("###########cost time:", time.time() - tic)
         # evaluate on validation set
         valObj, prec1, prec5 = validate(val_loader, model, criterion)
         # update stats
@@ -202,6 +216,9 @@ def train(train_loader, model, criterion, optimizer, epoch):
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
+        ######################################################
+        # with amp.scale_loss(loss, optimizer) as scaled_loss:
+        #     scaled_loss.backward()
         loss.backward()
         optimizer.step()
 

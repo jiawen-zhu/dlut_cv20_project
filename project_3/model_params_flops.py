@@ -7,8 +7,10 @@ import torch
 def model_params_flops(arch):
     print('==========================================================================')
     model = globals()[arch]()
+
     input = torch.randn(1, 3, 32, 32)
     macs, params = profile(model, inputs=(input,))
+    print(model)
     print('==========================================================================')
     print('Total params:: {:.3f} M\n'
           'Total FLOPs: {:.3f}MFLOPs'.format(params/10**6, macs/10**6))

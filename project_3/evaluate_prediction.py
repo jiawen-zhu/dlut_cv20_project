@@ -38,7 +38,7 @@ def main():
     print('=> Building model...')
     modeltype = globals()[args.arch]
     model = modeltype(num_classes=args.num_classes)
-    print(model)
+    # print(model)
 
     # optionally resume from a checkpoint
     if args.model_dir:
