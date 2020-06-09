@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from collections import OrderedDict
 
 
-__all__ = ['VoVNet', 'vovnet27_slim', 'vovnet39', 'vovnet57']
+__all__ = ['vovnet27_slim', 'vovnet39', 'vovnet57']
 
 
 model_urls = {
@@ -150,7 +150,9 @@ class VoVNet(nn.Module):
                                        layer_per_block,
                                        i+2))
 
-        self.classifier = nn.Linear(config_concat_ch[-1], num_classes)
+        self.classifier = nn.Sequential(
+            nn.Dropout(),
+            nn.Linear(config_concat_ch[-1], num_classes),)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):

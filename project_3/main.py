@@ -24,18 +24,18 @@ parser.add_argument('--data', default='./data', type=str, metavar='N',
                     help='root directory of dataset where directory train_data or val_data exists')
 parser.add_argument('--result', default='./Results',
                     type=str, metavar='N', help='root directory of results')
-parser.add_argument('--arch', '-a', metavar='ARCH', default='vovnet27_slim',
+parser.add_argument('--arch', '-a', metavar='ARCH', default='VoVNet',
                     help='model architecture')
-# AlexNet_BN PeleeNet HBONet vovnet27_slim ghost_net
+# AlexNet_BN PeleeNet HBONet vovnet27_slim ghost_net MobileNetV3_Large VoVNet
 parser.add_argument('--num-classes', default=100, type=int, help='define the number of classes')
-parser.add_argument('--epochs', default=160, type=int, metavar='N',
+parser.add_argument('--epochs', default=140, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('-b', '--batch-size', default=128, type=int, metavar='N',
                     help='mini-batch size (default: 128), used for train and validation')
 # 128
 parser.add_argument('--lr', '--learning-rate', default=0.1, type=float, metavar='LR',
                     help='initial learning rate')
-# alex 0.1 pelee 0.18 pelee_adam 1e-4
+# alex 0.1 pelee 0.18 pelee_adam 1e-4 vovnet27_slim 0.1(SGD) 1e-3(adam)
 parser.add_argument('--optimizer', default='SGD', type=str, metavar='M', help='optimization method')
 # SGD0.1 Adam1e-3 RMSprop0.01
 parser.add_argument('--print-freq', '-p', default=20, type=int, metavar='N',
@@ -49,16 +49,21 @@ parser.add_argument('--cuda', default=torch.cuda.is_available(), type=bool, help
 parser.add_argument('--adjust_lr', default='step_decrease', type=str, help='way to adjust lr')
 # step_decrease cosine warm_up
 parser.add_argument('--label_smooth', default=False, action='store_true', help='label_smooth')
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+# os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 best_prec1 = 0
 
+np.random.seed(3035)
+torch.manual_seed(3035)
+torch.cuda.manual_seed(3035)
 
 def main():
     global args, best_prec1
     args = parser.parse_args()
     args.start_epoch = 0
     # mkdir a new folder to store the checkpoint and best model
-    args.result = os.path.join(args.result, args.arch + '_lr_{}'.format(args.lr))
+
+    args.result = os.path.join(args.result, args.arch + '_lr_{}'.format(args.lr)
+                               + time.strftime("-%m-%d-%H-%M", time.localtime()))
     print(args)
     if not os.path.exists(args.result):
         os.makedirs(args.result)
@@ -161,7 +166,7 @@ def main():
             save_checkpoint(stat, False,
                             [os.path.join(args.result, 'checkpoint_{}.pth.tar'.format(int(epoch + 1)))])
         # plot curve
-        plot_curve(stats_, args.result, True)
+        plot_curve(stats_, args.result, False)
         data = stats_
         sio.savemat(os.path.join(args.result, 'stats.mat'), {'data': data})
 
@@ -305,12 +310,14 @@ def adjust_learning_rate(optimizer, epoch, iterations_per_epoch=None, iteration=
     """
     if args.adjust_lr == 'step_decrease':
         print(args.adjust_lr + ' learn rate policy ')
-        if epoch < 90:
+        if epoch < 100:  # 90
             lr = args.lr
         elif epoch < 120:
             lr = args.lr * 0.1
-        else:
+        elif epoch < 135:
             lr = args.lr * 0.01
+        else:
+            lr = args.lr * 0.001
         for param_group in optimizer.param_groups:
             param_group['lr'] = lr
     elif args.adjust_lr == 'cosine':
@@ -325,7 +332,7 @@ def adjust_learning_rate(optimizer, epoch, iterations_per_epoch=None, iteration=
         if epoch < 1:
             lr = 0.01 * args.lr
             print(' at warming up! ')
-        elif epoch < 90:
+        elif epoch < 50:# 90
             lr = args.lr
         elif epoch < 120:
             lr = args.lr * 0.1

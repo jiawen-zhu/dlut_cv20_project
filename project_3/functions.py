@@ -61,6 +61,7 @@ def plot_curve(stats, path, iserr):
         valTop1 = np.array(stats.valTop1)
         valTop5 = np.array(stats.valTop5)
         titleName = 'accuracy'
+        # best_top1 = 0
     epoch = len(trainObj)
     figure = plt.figure()
     obj = plt.subplot(1,3,1)
@@ -73,8 +74,9 @@ def plot_curve(stats, path, iserr):
     top1 = plt.subplot(1,3,2)
     top1.plot(range(1,epoch+1),trainTop1,'o-',label = 'train')
     top1.plot(range(1,epoch+1),valTop1,'o-',label = 'val')
-    plt.title('top1'+titleName)
+    plt.title('top1'+titleName+ ' best:' + str(round(max(valTop1),1)))
     plt.xlabel('epoch')
+    # top1.text(0, 0, 'best=53.01', fontsize=15)
     handles, labels = top1.get_legend_handles_labels()
     top1.legend(handles[::-1], labels[::-1])
     top5 = plt.subplot(1,3,3)

@@ -13,15 +13,15 @@ from image_preprocess import *
 parser = argparse.ArgumentParser(description='PyTorch ImageNet100_32*32 Evaluating')
 parser.add_argument('--data', default='./data', type=str, metavar='N',
                     help='root directory of dataset where directory train_data or val_data exists')
-parser.add_argument('--result', default='./Results/vovnet27_slim_lr_0.1',
+parser.add_argument('--result', default='./Results/vov_log',
                     type=str, metavar='N', help='root directory of results')
-parser.add_argument('--arch', '-a', metavar='ARCH', default='vovnet27_slim',
+parser.add_argument('--arch', '-a', metavar='ARCH', default='VoVNet',
                     help='model architecture')
 # AlexNet_BN
 parser.add_argument('--num-classes', default=100, type=int,help='define the number of classes')
 parser.add_argument('-b', '--batch-size', default=128, type=int, metavar='N', help='mini-batch size (default: 128) used for test')
 parser.add_argument('--print-freq', '-p', default=10, type=int, metavar='N', help='print frequency (default: 10)')
-parser.add_argument('--model-dir', default='./Results/vovnet27_slim_lr_0.1/model_best.pth.tar',
+parser.add_argument('--model-dir', default='./Results/vov_log/model_best.pth.tar',
                     type=str, metavar='PATH', help='path to latest checkpoint (default: none)')
 parser.add_argument('--cuda', default=torch.cuda.is_available(), type=bool, help='whether cuda is in use.')
 
