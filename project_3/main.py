@@ -30,18 +30,18 @@ parser.add_argument('--arch', '-a', metavar='ARCH', default='VoVNet',
 # AlexNet_BN PeleeNet HBONet vovnet27_slim ghost_net MobileNetV3_Large VoVNet
 parser.add_argument('--num-classes', default=100, type=int, help='define the number of classes')
 parser.add_argument('--epochs', default=140, type=int, metavar='N',
-                    help='number of total epochs to run')
+                    help='number of total epochs to run')#140
 parser.add_argument('-b', '--batch-size', default=128, type=int, metavar='N',
                     help='mini-batch size (default: 128), used for train and validation')
 # 128
 parser.add_argument('--lr', '--learning-rate', default=0.1, type=float, metavar='LR',
-                    help='initial learning rate')
+                    help='initial learning rate') # 0.1
 # alex 0.1 pelee 0.18 pelee_adam 1e-4 vovnet27_slim 0.1(SGD) 1e-3(adam)
 parser.add_argument('--optimizer', default='SGD', type=str, metavar='M', help='optimization method')
 # SGD0.1 Adam1e-3 RMSprop0.01
-parser.add_argument('--print-freq', '-p', default=20, type=int, metavar='N',
+parser.add_argument('--print-freq', '-p', default=80, type=int, metavar='N',
                     help='print frequency (default: 10)')
-parser.add_argument('--save-freq', '-sp', default=20, type=int, metavar='N',
+parser.add_argument('--save-freq', '-sp', default=40, type=int, metavar='N',
                     help='save checkpoint frequency (default: 10)')
 parser.add_argument('--resume', default='',
                     type=str, metavar='PATH', help='path to latest checkpoint (default: none)')
@@ -51,6 +51,9 @@ parser.add_argument('--adjust_lr', default='step_decrease', type=str, help='way 
 # step_decrease cosine warm_up
 parser.add_argument('--label_smooth', default=False, action='store_true', help='label_smooth')
 # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+parser.add_argument('--task', default='ColorJitter', type=str, help='task')
+# parser.add_argument('--dropout', default=0.3, type=float,
+#                     help='dropout')
 best_prec1 = 0
 
 np.random.seed(3035)
@@ -63,7 +66,7 @@ def main():
     args.start_epoch = 0
     # mkdir a new folder to store the checkpoint and best model
 
-    args.result = os.path.join(args.result, args.arch + '_lr_{}'.format(args.lr)
+    args.result = os.path.join(args.result, args.task + '_' + args.arch + '_lr_{}'.format(args.lr)
                                + time.strftime("-%m-%d-%H-%M", time.localtime()))
     print(args)
     if not os.path.exists(args.result):
@@ -116,7 +119,7 @@ def main():
         ########################################
         model = nn.DataParallel(model).cuda()
         if args.label_smooth:
-            criterion = LabelSmoothing(smoothing=0.1).cuda()
+            criterion = LabelSmoothing(smoothing=0.15).cuda()
             print('label smooth!')
         else:
             criterion = criterion.cuda()
@@ -340,21 +343,23 @@ def adjust_learning_rate(optimizer, epoch, iterations_per_epoch=None, iteration=
     elif args.adjust_lr == 'cosine':
         print(args.adjust_lr + ' learn rate policy ')
         T_total = args.epochs * iterations_per_epoch
-        T_cur = (epoch % args.epochs) * iterations_per_epoch + iteration
+        T_cur = iteration # (epoch % args.epochs) * iterations_per_epoch
+        # print('T_cur / T_total:  ', T_cur / T_total)
         lr = 0.5 * args.lr * (1 + math.cos(math.pi * T_cur / T_total))
         for param_group in optimizer.param_groups:
             param_group['lr'] = lr
     elif args.adjust_lr == 'warm_up':
         print(args.adjust_lr + ' learn rate policy ')
-        if epoch < 1:
-            lr = 0.01 * args.lr
-            print(' at warming up! ')
-        elif epoch < 50:# 90
+        if epoch < 3:
+            lr = args.lr * 0.001 * (10**epoch)
+        elif epoch < 100:
             lr = args.lr
         elif epoch < 120:
             lr = args.lr * 0.1
-        else:
+        elif epoch < 135:
             lr = args.lr * 0.01
+        else:
+            lr = args.lr * 0.001
         for param_group in optimizer.param_groups:
             param_group['lr'] = lr
 

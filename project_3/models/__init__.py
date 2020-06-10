@@ -6,3 +6,4 @@ from models.ghostnet import *
 from models.VovNet import *
 from models.mobilev3 import *
 from models.vovnetv2 import *
+from models.dutcvcnet import *
