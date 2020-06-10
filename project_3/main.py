@@ -25,8 +25,10 @@ parser.add_argument('--data', default='./data', type=str, metavar='N',
                     help='root directory of dataset where directory train_data or val_data exists')
 parser.add_argument('--result', default='./Results',
                     type=str, metavar='N', help='root directory of results')
-parser.add_argument('--arch', '-a', metavar='ARCH', default='VoVNet',
+#*********************************************************************
+parser.add_argument('--arch', '-a', metavar='ARCH', default='dutcvcnet',
                     help='model architecture')
+# dutcvcnet
 # AlexNet_BN PeleeNet HBONet vovnet27_slim ghost_net MobileNetV3_Large VoVNet
 parser.add_argument('--num-classes', default=100, type=int, help='define the number of classes')
 parser.add_argument('--epochs', default=140, type=int, metavar='N',
@@ -34,7 +36,7 @@ parser.add_argument('--epochs', default=140, type=int, metavar='N',
 parser.add_argument('-b', '--batch-size', default=128, type=int, metavar='N',
                     help='mini-batch size (default: 128), used for train and validation')
 # 128
-parser.add_argument('--lr', '--learning-rate', default=0.1, type=float, metavar='LR',
+parser.add_argument('--lr', '--learning-rate', default=0.2, type=float, metavar='LR',
                     help='initial learning rate') # 0.1
 # alex 0.1 pelee 0.18 pelee_adam 1e-4 vovnet27_slim 0.1(SGD) 1e-3(adam)
 parser.add_argument('--optimizer', default='SGD', type=str, metavar='M', help='optimization method')
@@ -49,9 +51,11 @@ parser.add_argument('--resume', default='',
 parser.add_argument('--cuda', default=torch.cuda.is_available(), type=bool, help='whether cuda is in use.')
 parser.add_argument('--adjust_lr', default='step_decrease', type=str, help='way to adjust lr')
 # step_decrease cosine warm_up
-parser.add_argument('--label_smooth', default=False, action='store_true', help='label_smooth')
+#****************************************************************************
+parser.add_argument('--label_smooth', default=True, action='store_true', help='label_smooth')
 # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-parser.add_argument('--task', default='ColorJitter', type=str, help='task')
+parser.add_argument('--task', default='add_label_smooth+CrossEntropy', type=str, help='task')
+# vov_arch
 # parser.add_argument('--dropout', default=0.3, type=float,
 #                     help='dropout')
 best_prec1 = 0
@@ -82,7 +86,9 @@ def main():
     model_params_flops(args.arch)
 
     # define loss function (criterion)
-    criterion = nn.CrossEntropyLoss()
+    # criterion = nn.CrossEntropyLoss()
+    criterion = None
+    criterion2 = None
 
     # optionally resume from a checkpoint
     if args.resume:
@@ -120,6 +126,7 @@ def main():
         model = nn.DataParallel(model).cuda()
         if args.label_smooth:
             criterion = LabelSmoothing(smoothing=0.15).cuda()
+            criterion2 = criterion.cuda()
             print('label smooth!')
         else:
             criterion = criterion.cuda()
@@ -160,7 +167,8 @@ def main():
         print('learning rate:{}'.format(optimizer.param_groups[0]['lr']))
         # train for one epoch
         tic = time.time()
-        trainObj, top1, top5 = train(train_loader, model, criterion, optimizer, epoch)
+        #################################################################
+        trainObj, top1, top5 = train(train_loader, model, criterion, optimizer, epoch, criterion2=criterion2)
         print("###########cost time:", time.time() - tic)
         # evaluate on validation set
         valObj, prec1, prec5 = validate(val_loader, model, criterion)
@@ -178,17 +186,17 @@ def main():
                 'best_prec1': best_prec1,
                 'optimizer': optimizer.state_dict()}
         save_checkpoint(stat, is_best, filename)
-        if int(epoch + 1) % args.save_freq == 0:
-            print("=> save checkpoint_{}.pth.tar'".format(int(epoch + 1)))
-            save_checkpoint(stat, False,
-                            [os.path.join(args.result, 'checkpoint_{}.pth.tar'.format(int(epoch + 1)))])
+        # if int(epoch + 1) % args.save_freq == 0:
+        #     print("=> save checkpoint_{}.pth.tar'".format(int(epoch + 1)))
+        #     save_checkpoint(stat, False,
+        #                     [os.path.join(args.result, 'checkpoint_{}.pth.tar'.format(int(epoch + 1)))])
         # plot curve
         plot_curve(stats_, args.result, False)
         data = stats_
         sio.savemat(os.path.join(args.result, 'stats.mat'), {'data': data})
 
 
-def train(train_loader, model, criterion, optimizer, epoch):
+def train(train_loader, model, criterion, optimizer, epoch, criterion2=None):
     batch_time = AverageMeter()
     data_time = AverageMeter()
     losses = AverageMeter()
@@ -209,7 +217,10 @@ def train(train_loader, model, criterion, optimizer, epoch):
 
         # compute output
         output = model(input)
+        # print(target.shape)
         loss = criterion(output, target)
+        ######################################################################
+        loss = 0.5*criterion(output, target) + 0.5*criterion2(output, target)
 
         # measure accuracy and record loss
         prec1, prec5 = accuracy(output, target, topk=(1, 5))
@@ -319,7 +330,7 @@ def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
         state_dict = new_state
     state['state_dict'] = state_dict
     torch.save(state, filename[0])
-    torch.save(state, filename[0])
+    # torch.save(state, filename[0])
     if is_best:
         shutil.copyfile(filename[0], filename[1])
 

@@ -1,5 +1,6 @@
 import collections
 import torch
+import math
 from torch import nn
 
 __all__ = ['dutcvcnet']
@@ -7,9 +8,15 @@ __all__ = ['dutcvcnet']
 CONFIG = {
     "dutcvcnet": [
         # kernel size, inner channels, layer repeats, output channels, downsample
-        [3, 64, 3, 128, True],
-        [3, 80, 3, 192, True],
-        [3, 96, 3, 192, False],
+        # [3, 64, 3, 128, True],
+        # [3, 80, 3, 192, True],
+        # [3, 96, 3, 192, False],
+
+        [3, 16, 1, 128, True],
+        [3, 16, 1, 128, False],
+        [3, 24, 1, 256, True],
+        [3, 32, 1, 256, False],
+        [3, 64, 3, 512, True],  #63.4
     ],
 }
 
@@ -85,52 +92,6 @@ class _OSA(nn.Module):
 
 
 
-class BasicConv2d(nn.Module):
-    def __init__(self, in_planes, out, kernel_size, stride, padding):
-        super(BasicConv2d, self).__init__()
-        self.conv = nn.Sequential(nn.Conv2d(in_planes, out, kernel_size=kernel_size, stride=stride, padding=padding),
-                                  nn.BatchNorm2d(out),
-                                  nn.ReLU(inplace=True))
-
-    def forward(self, x):
-        x = self.conv(x)
-        return x
-
-class GoogLeNetV4Stem(nn.Module):
-    def __init__(self):
-        super(GoogLeNetV4Stem, self).__init__()
-        self.conv1 = BasicConv2d(3, 48, kernel_size=3, stride=1, padding=0)
-        self.conv2 = BasicConv2d(48, 48, kernel_size=3, stride=2, padding=0)
-
-        self.conv4_2 = BasicConv2d(48, 48, kernel_size=3, stride=1, padding=1)
-
-        self.conv5_1_2 = BasicConv2d(96, 48, kernel_size=(3, 1), stride=1, padding=(1, 0))#7
-        self.conv5_1_3 = BasicConv2d(48, 48, kernel_size=(1, 3), stride=1, padding=(0, 1))#7
-        self.conv5_1_4 = BasicConv2d(48, 48, kernel_size=(3, 3), stride=1, padding=0)
-
-        self.conv5_2_1 = BasicConv2d(96, 48, kernel_size=1, stride=1, padding=0)
-        self.conv5_2_2 = BasicConv2d(48, 48, kernel_size=3, stride=1, padding=0)
-
-        self.conv6_2 = BasicConv2d(96, 96, kernel_size=3, stride=1, padding=1)
-
-
-    def forward(self, x):
-        x = self.conv1(x)
-        x = self.conv2(x)
-        x2 = self.conv4_2(x)
-        x = torch.cat((x, x2), dim=1)
-        x1 = self.conv5_1_2(x)
-        x1 = self.conv5_1_3(x1)
-        x1 = self.conv5_1_4(x1)
-        x2 = self.conv5_2_1(x)
-        x2 = self.conv5_2_2(x2)
-        x = torch.cat((x1, x2), dim=1)
-        x1 = self.conv6_2(x)
-        x = torch.cat((x1, x), dim=1)
-
-        return x
-
-
 class dutcvcnet(nn.Module):
     def __init__(
             self,
@@ -143,11 +104,16 @@ class dutcvcnet(nn.Module):
 
         super().__init__()
 
-        self.stem = GoogLeNetV4Stem()
+        self.stem = nn.Sequential(
+            _ConvBnRelu(in_ch, 16, kernel_size=3, stride=1),
+            _ConvBnRelu(16, 16, kernel_size=3, stride=1),
+            _ConvBnRelu(16, 24, kernel_size=3, stride=1),
+            _ConvBnRelu(24, 36, kernel_size=3, stride=1), #63.4
+        )
 
         body_layers = collections.OrderedDict()
         conf = CONFIG[model_type]
-        in_ch = 192
+        in_ch = 36
         for idx, block in enumerate(conf):
             kernel_size, inner_ch, repeats, out_ch, downsample = block
             body_layers[f"osa{idx}"] = _OSA(
@@ -169,6 +135,9 @@ class dutcvcnet(nn.Module):
             nn.Linear(in_ch, num_classes, bias=True),
         )
 
+        # self._initialize_weights()
+        self._initialize_weights2()
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         y = self.stem(x)
         # print(y.shape)
@@ -178,10 +147,39 @@ class dutcvcnet(nn.Module):
             y = self.classifier(y)
         return y
 
+    def _initialize_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+                m.weight.data.normal_(0, math.sqrt(2. / n))
+                if m.bias is not None:
+                    m.bias.data.zero_()
+            elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+            elif isinstance(m, nn.Linear):
+                n = m.weight.size(1)
+                m.weight.data.normal_(0, 0.01)
+                m.bias.data.zero_()
+
+    def _initialize_weights2(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal(m.weight)
+                if m.bias is not None:
+                    m.bias.data.zero_()
+            elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+            elif isinstance(m, nn.Linear):
+                n = m.weight.size(1)
+                m.weight.data.normal_(0, 0.01)
+                m.bias.data.zero_()
 
 
-net = dutcvcnet(3, 100)
-net = net.eval()
-with torch.no_grad():
-    y = net(torch.rand(2, 3, 32, 32))
-    print(list(y.shape))
+
+# net = dutcvcnet(3, 100)
+# net = net.eval()
+# with torch.no_grad():
+#     y = net(torch.rand(2, 3, 32, 32))
+#     print(list(y.shape))

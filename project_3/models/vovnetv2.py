@@ -15,9 +15,80 @@ CONFIG = {
     "vovnet19": [
         # kernel size, inner channels, layer repeats, output channels, downsample
 
-        [3, 64, 3, 128, True],
-        [3, 80, 3, 192, True],
-        [3, 96, 3, 192, False],
+        # [3, 64, 3, 128, True],
+        # [3, 80, 3, 192, True],
+        # [3, 96, 3, 192, False],
+
+        # [3, 32, 3, 64, True],
+        # [3, 64, 1, 128, True],
+        # [3, 80, 2, 192, True],
+        # [3, 96, 3, 192, False],          XXX
+
+        # [3, 48, 2, 96, True],
+        # [3, 64, 3, 128, True],
+        # [3, 96, 3, 192, True],
+        # [3, 112, 1, 192, False],    60.6
+
+        # [3, 32, 1, 64, True],
+        # [3, 48, 1, 64, False],
+        # [3, 96, 2, 192, True],
+        # [3, 128, 2, 256, True],      60.6
+
+        # [3, 16, 1, 96, True],
+        # [3, 16, 1, 96, False],
+        # [3, 32, 1, 384, True],
+        # [3, 32, 1, 384, False],       #61.1 #61.7
+
+        # [3, 32, 5, 64, True],
+        # [3, 64, 5, 256, True],
+        # [3, 4, 1, 16, True],    xxxxxxxxxxxxx50.8
+
+        # [3, 16, 1, 96, True],
+        # [3, 32, 1, 384, True], XXXXXXXXXXXX
+
+        # [3, 32, 5, 256, True],
+        # [3, 16, 2, 128, True],    XXXXXXXXXXXXXXXXXXXXXX
+
+        # [3, 32, 7, 256, True],    xxxxx
+
+        # [3, 16, 5, 128, True],
+        # [3, 32, 5, 256, True],
+        # [3, 96, 5, 512, True],        # 61.9 #63.3
+
+
+        [3, 16, 1, 128, True],
+        [3, 16, 1, 128, False],
+        [3, 24, 1, 256, True],
+        [3, 32, 1, 256, False],
+        [3, 64, 3, 512, True],    #62.1 #63.4
+
+        # [3, 4, 1, 128, True],
+        # [3, 4, 2, 128, False],
+        # [3, 8, 1, 256, True],
+        # [3, 8, 1, 256, False],
+        # [3, 16, 1, 512, True],
+        # [3, 16, 1, 512, False],
+        # [3, 16, 1, 512, False],       61.0
+
+        # [3, 16, 2, 128, True],
+        # [3, 32, 2, 512, True],
+        # [3, 64, 2, 1024, True],     60.6
+
+        # [3, 8, 1, 128, True],
+        # [3, 16, 1, 128, False],
+        # [3, 24, 1, 256, True],
+        # [3, 24, 1, 256, False],
+        # [3, 32, 1, 512, True],
+        # [3, 16, 1, 512, False], #61.7 #63.4
+
+        # [3, 4, 1, 128, True],
+        # [3, 8, 1, 128, False],
+        # [3, 16, 1, 128, True],
+        # [3, 16, 1, 128, False],
+        # [3, 16, 1, 512, True],
+        # [3, 8, 1, 1024, True],  #61.1 #62.1
+
+
 
 
     ],
@@ -158,8 +229,8 @@ class BasicConv2d(nn.Module):
 class GoogLeNetV4Stem(nn.Module):
     def __init__(self):
         super(GoogLeNetV4Stem, self).__init__()
-        self.conv1 = BasicConv2d(3, 48, kernel_size=3, stride=1, padding=0)
-        self.conv2 = BasicConv2d(48, 48, kernel_size=3, stride=2, padding=0)
+        self.conv1 = BasicConv2d(3, 64, kernel_size=3, stride=1, padding=0)
+        self.conv2 = BasicConv2d(64, 48, kernel_size=3, stride=2, padding=0)
 
         self.conv4_2 = BasicConv2d(48, 48, kernel_size=3, stride=1, padding=1)
 
@@ -204,18 +275,48 @@ class VoVNet(nn.Module):
 
         super().__init__()
 
-        # Input stage.
+        # # Input stage.
         # self.stem = nn.Sequential(
         #     _ConvBnRelu(in_ch, 64, kernel_size=3, stride=1),
         #     _ConvBnRelu(64, 64, kernel_size=3, stride=2),
         #     _ConvBnRelu(64, 96, kernel_size=3, stride=1),
         # )
+        self.stem = nn.Sequential(
+            # _ConvBnRelu(in_ch, 48, kernel_size=3, stride=1),
+            # _ConvBnRelu(48, 32, kernel_size=3, stride=1), #62.1
 
-        self.stem = GoogLeNetV4Stem()
+            # _ConvBnRelu(in_ch, 64, kernel_size=3, stride=1),# 60.8
+
+            # _ConvBnRelu(in_ch, 24, kernel_size=3, stride=1),
+            # _ConvBnRelu(24, 16, kernel_size=3, stride=1), #60.5
+
+            # _ConvBnRelu(in_ch, 36, kernel_size=3, stride=1),
+            # _ConvBnRelu(36, 36, kernel_size=3, stride=1), #62.4
+
+            # _ConvBnRelu(in_ch, 24, kernel_size=3, stride=1),
+            # _ConvBnRelu(24, 24, kernel_size=3, stride=1),  #
+            # _ConvBnRelu(24, 36, kernel_size=3, stride=1), #62.7
+
+            _ConvBnRelu(in_ch, 16, kernel_size=3, stride=1),
+            _ConvBnRelu(16, 16, kernel_size=3, stride=1),
+            _ConvBnRelu(16, 24, kernel_size=3, stride=1),
+            _ConvBnRelu(24, 36, kernel_size=3, stride=1), #63.4
+
+            # _ConvBnRelu(in_ch, 8, kernel_size=3, stride=1),
+            # _ConvBnRelu(8, 8, kernel_size=3, stride=1),
+            # _ConvBnRelu(8, 16, kernel_size=3, stride=1),
+            # _ConvBnRelu(16, 24, kernel_size=3, stride=1),
+            # _ConvBnRelu(24, 36, kernel_size=3, stride=1),  #63.0
+
+
+
+        )
+
+        # self.stem = GoogLeNetV4Stem()
 
         body_layers = collections.OrderedDict()
         conf = CONFIG[model_type]
-        in_ch = 192
+        in_ch = 36
         for idx, block in enumerate(conf):
             kernel_size, inner_ch, repeats, out_ch, downsample = block
             body_layers[f"osa{idx}"] = _OSA(
@@ -237,6 +338,8 @@ class VoVNet(nn.Module):
             nn.Linear(in_ch, num_classes, bias=True),
         )
 
+        self._initialize_weights2()
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         y = self.stem(x)
         # print(y.shape)
@@ -246,10 +349,24 @@ class VoVNet(nn.Module):
             y = self.classifier(y)
         return y
 
+    def _initialize_weights2(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal(m.weight)
+                if m.bias is not None:
+                    m.bias.data.zero_()
+            elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+            elif isinstance(m, nn.Linear):
+                n = m.weight.size(1)
+                m.weight.data.normal_(0, 0.01)
+                m.bias.data.zero_()
 
 
-net = VoVNet(3, 100)
-net = net.eval()
-with torch.no_grad():
-    y = net(torch.rand(2, 3, 32, 32))
-    print(list(y.shape))
+
+# net = VoVNet(3, 100)
+# net = net.eval()
+# with torch.no_grad():
+#     y = net(torch.rand(2, 3, 32, 32))
+#     print(list(y.shape))
