@@ -54,9 +54,9 @@ parser.add_argument('--adjust_lr', default='step_decrease', type=str, help='way 
 #****************************************************************************
 parser.add_argument('--label_smooth', default=False, action='store_true', help='label_smooth')
 # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-parser.add_argument('--task', default='head_search', type=str, help='task')
+parser.add_argument('--task', default='baseline', type=str, help='task')
 parser.add_argument('--model_type', default='vovnet19_0', type=str, help='model_type')
-parser.add_argument('--head', default=8, type=int, help='head')
+parser.add_argument('--head', default=0, type=int, help='head')
 # vov_arch
 # parser.add_argument('--dropout', default=0.3, type=float,
 #                     help='dropout')

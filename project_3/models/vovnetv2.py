@@ -18,99 +18,139 @@ CONFIG = {
         [3, 24, 1, 256, True],
         [3, 32, 1, 256, False],
         [3, 64, 3, 512, True],    #62.1 #63.4
+
+        # [3, 8, 1, 128, True],
+        # [3, 16, 1, 128, False],
+        # [3, 24, 1, 256, True],
+        # [3, 24, 1, 256, False],
+        # [3, 32, 1, 512, True],
+        # [3, 16, 1, 512, False], #61.7 #63.4
+
+        # [3, 16, 5, 128, True],
+        # [3, 32, 5, 256, True],
+        # [3, 96, 5, 512, True],        # 61.9 #63.3
     ],
     "vovnet19_1": [
+        [3, 16, 2, 128, True],
+        [3, 24, 2, 256, True],
+        [3, 64, 3, 512, True], #放前两阶段进重复
+
+        # [3, 16, 1, 192, True],
+        # [3, 16, 1, 192, False],
+        # [3, 24, 1, 256, True],
+        # [3, 32, 1, 256, False],
+        # [3, 64, 3, 512, True],  XXX改动前两层通道数
+
+        # [3, 16, 1, 64, True],
+        # [3, 16, 1, 64, False],
+        # [3, 16, 1, 64, False],
+        # [3, 16, 1, 256, True],
+        # [3, 16, 1, 256, False],
+        # [3, 32, 1, 256, False],
+        # [3, 64, 1, 512, True],  XXX
+
+        # [3, 16, 1, 128, True],
+        # [3, 16, 1, 128, False],
+        # [3, 32, 1, 256, True],
+        # [3, 96, 1, 1024, True], XXX
+
+        # [3, 16, 1, 128, True],
+        # [3, 16, 1, 128, False],
+        # [3, 24, 1, 256, True],
+        # [3, 32, 1, 256, False],
+        # [3, 64, 1, 512, True],  XXX最后重复3去掉
+    ],
+    "vovnet19_2": [
+        [3, 16, 2, 128, True],
+        [3, 16, 1, 128, False],
+        [3, 24, 1, 256, True],
+        [3, 32, 1, 256, False],
+        [3, 64, 3, 512, True], # 增加第一阶段第一层的重复
+
+        # [3, 8, 1, 128, True],
+        # [3, 8, 1, 128, False],
+        # [3, 16, 1, 256, True],
+        # [3, 32, 1, 256, False],
+        # [3, 64, 1, 512, True], XXX前两层内层减小
+    ],
+    "vovnet19_3": [
+        [3, 1, 1, 128, True],
+        [3, 1, 1, 128, False],
+        [3, 1, 1, 256, True],
+        [3, 1, 1, 256, False],
+        [3, 1, 3, 512, True],   #内层全改为1
+
+        # [3, 8, 1, 128, True],
+        # [3, 8, 1, 128, False],
+        # [3, 16, 1, 256, True],
+        # [3, 32, 1, 256, False],  XXX
+    ],
+    "vovnet19_4": [
+        [3, 16, 1, 128, True],
+        [3, 16, 1, 128, False],
+        [3, 24, 1, 128, True],
+        [3, 32, 1, 128, False],
+        [3, 64, 3, 128, False], #最后层为128且不下采
+
+        # [3, 8, 1, 128, True],
+        # [3, 8, 1, 128, False],
+        # [3, 16, 1, 256, True],
+        # [3, 32, 1, 256, False],  XXX
+    ],
+    "vovnet19_5": [
         [3, 16, 1, 128, True],
         [3, 16, 1, 128, False],
         [3, 24, 1, 256, True],
         [3, 32, 1, 256, False],
-        [3, 64, 1, 512, True],
-    ],
-    "vovnet19_2": [
-        [3, 8, 1, 128, True],
-        [3, 8, 1, 128, False],
-        [3, 16, 1, 256, True],
-        [3, 32, 1, 256, False],
-        [3, 64, 1, 512, True],
-    ],
-    "vovnet19_3": [
-        [3, 8, 1, 128, True],
-        [3, 8, 1, 128, False],
-        [3, 16, 1, 256, True],
-        [3, 32, 1, 256, False],
-    ],
-    "vovnet19_4": [
-        [3, 8, 1, 128, True],
-        [3, 8, 1, 128, False],
-        [3, 16, 1, 256, True],
-        [3, 32, 1, 256, False],
-    ],
-    "vovnet19_5": [
-        [3, 8, 8, 512, True],
+        [1, 64, 3, 512, True], #最后改1*1卷积
+
+        # [3, 8, 8, 512, True],   XXX
     ],
     "vovnet19_6": [
-        [3, 12, 3, 128, True],
-        [3, 24, 3, 256, True],
-        [3, 48, 3, 348, True],
-        [3, 64, 3, 512, True],
+        [3, 16, 1, 128, True],
+        [3, 16, 1, 128, False],
+        [3, 24, 1, 256, True],
+        [3, 32, 1, 256, False],
+        [3, 72, 3, 512, True],  #增加最后一层内
+
+        # [3, 12, 3, 128, True],
+        # [3, 24, 3, 256, True],
+        # [3, 48, 3, 348, True],
+        # [3, 64, 3, 512, True],   XXX
     ],
     "vovnet19_7": [
-        [3, 16, 1, 64, True],
-        [3, 16, 1, 64, False],
-        [3, 24, 1, 128, True],
-        [3, 32, 1, 128, False],
-        [3, 64, 3, 512, True],
+        [3, 16, 1, 128, True],
+        [3, 16, 1, 128, False],
+        [3, 24, 1, 384, True],
+        [3, 64, 3, 512, True], #缩减第二层
+
+        # [3, 16, 1, 64, True],
+        # [3, 16, 1, 64, False],
+        # [3, 24, 1, 128, True],
+        # [3, 32, 1, 128, False],
+        # [3, 64, 3, 512, True], XXX前面两层输出减少
     ],
     "vovnet19_8": [
-        [3, 16, 1, 64, True],
-        [3, 24, 1, 128, True],
-        [3, 64, 3, 512, True],
+        [3, 16, 2, 256, True],
+        [3, 64, 2, 512, True], #精简
+
+        # [3, 16, 1, 64, True],
+        # [3, 24, 1, 128, True],
+        # [3, 64, 3, 512, True],   XXX
     ],
 
 
     "vovnet19": [
         # kernel size, inner channels, layer repeats, output channels, downsample
 
-        # [3, 64, 3, 128, True],
-        # [3, 80, 3, 192, True],
-        # [3, 96, 3, 192, False],
-
-        # [3, 32, 3, 64, True],
-        # [3, 64, 1, 128, True],
-        # [3, 80, 2, 192, True],
-        # [3, 96, 3, 192, False],          XXX
-
-        # [3, 48, 2, 96, True],
-        # [3, 64, 3, 128, True],
-        # [3, 96, 3, 192, True],
-        # [3, 112, 1, 192, False],    60.6
-
-        # [3, 32, 1, 64, True],
-        # [3, 48, 1, 64, False],
-        # [3, 96, 2, 192, True],
-        # [3, 128, 2, 256, True],      60.6
-
         # [3, 16, 1, 96, True],
         # [3, 16, 1, 96, False],
         # [3, 32, 1, 384, True],
         # [3, 32, 1, 384, False],       #61.1 #61.7
 
-        # [3, 32, 5, 64, True],
-        # [3, 64, 5, 256, True],
-        # [3, 4, 1, 16, True],    xxxxxxxxxxxxx50.8
-
-        # [3, 16, 1, 96, True],
-        # [3, 32, 1, 384, True], XXXXXXXXXXXX
-
-        # [3, 32, 5, 256, True],
-        # [3, 16, 2, 128, True],    XXXXXXXXXXXXXXXXXXXXXX
-
-        # [3, 32, 7, 256, True],    xxxxx
-
         # [3, 16, 5, 128, True],
         # [3, 32, 5, 256, True],
         # [3, 96, 5, 512, True],        # 61.9 #63.3
-
 
         [3, 16, 1, 128, True],
         [3, 16, 1, 128, False],
@@ -337,57 +377,93 @@ class VoVNet(nn.Module):
 
         self.head = head
 
+        self.connect = 36 #36 baseline
         self.stem0 = nn.Sequential(
             _ConvBnRelu(in_ch, 16, kernel_size=3, stride=1),
             _ConvBnRelu(16, 16, kernel_size=3, stride=1),
             _ConvBnRelu(16, 24, kernel_size=3, stride=1),
-            _ConvBnRelu(24, 36, kernel_size=3, stride=1), #63.4
-        )
-        self.stem1 = nn.Sequential(
-            _ConvBnRelu(in_ch, 16, kernel_size=3, stride=1),
-            _ConvBnRelu(16, 24, kernel_size=3, stride=1),
+            # _ConvBnRelu(24, 36, kernel_size=3, stride=1), #63.4
             _ConvBnRelu(24, 36, kernel_size=3, stride=1),
+        )
+
+        self.stem1 = nn.Sequential(
+            _ConvBnRelu(in_ch, 36, kernel_size=3, stride=1),
+            _ConvBnRelu(36, 36, kernel_size=3, stride=1),
+
+            # _ConvBnRelu(in_ch, 16, kernel_size=3, stride=1),
+            # _ConvBnRelu(16, 24, kernel_size=3, stride=1),
+            # _ConvBnRelu(24, 36, kernel_size=3, stride=1), #去掉一层
         )
         self.stem2 = nn.Sequential(
-            _ConvBnRelu(in_ch, 24, kernel_size=3, stride=1),
-            _ConvBnRelu(24, 24, kernel_size=3, stride=1),
-            _ConvBnRelu(24, 36, kernel_size=3, stride=1),
+            _ConvBnRelu(in_ch, 48, kernel_size=3, stride=2),
+            _ConvBnRelu(48, 36, kernel_size=3, stride=1),
+
+            # _ConvBnRelu(in_ch, 24, kernel_size=3, stride=1),
+            # _ConvBnRelu(24, 24, kernel_size=3, stride=1),
+            # _ConvBnRelu(24, 36, kernel_size=3, stride=1), #去掉并加厚
         )
         self.stem3 = nn.Sequential(
-            _ConvBnRelu(in_ch, 12, kernel_size=3, stride=1),
-            _ConvBnRelu(12, 24, kernel_size=3, stride=1),
+            _ConvBnRelu(in_ch, 16, kernel_size=3, stride=1),
+            _ConvBnRelu(16, 24, kernel_size=3, stride=2),
+            _ConvBnRelu(24, 24, kernel_size=3, stride=1),
             _ConvBnRelu(24, 36, kernel_size=3, stride=1),
+
+            # _ConvBnRelu(in_ch, 12, kernel_size=3, stride=1),
+            # _ConvBnRelu(12, 24, kernel_size=3, stride=1),
+            # _ConvBnRelu(24, 36, kernel_size=3, stride=1),
         )
         self.stem4 = nn.Sequential(
-            _ConvBnRelu(in_ch, 36, kernel_size=3, stride=1),
-            _ConvBnRelu(36, 24, kernel_size=3, stride=1),
-            _ConvBnRelu(24, 36, kernel_size=3, stride=1),
+            _ConvBnRelu(in_ch, 64, kernel_size=3, stride=2),
+            _ConvBnRelu(64, 48, kernel_size=3, stride=1),
+            _ConvBnRelu(48, 36, kernel_size=3, stride=1),
+            _ConvBnRelu(36, 36, kernel_size=3, stride=1),
+
+            # _ConvBnRelu(in_ch, 36, kernel_size=3, stride=1),
+            # _ConvBnRelu(36, 24, kernel_size=3, stride=1),
+            # _ConvBnRelu(24, 36, kernel_size=3, stride=1),
         )
         self.stem5 = nn.Sequential(
-            _ConvBnRelu(in_ch, 36, kernel_size=3, stride=1),
-            _ConvBnRelu(36, 12, kernel_size=3, stride=1),
-            _ConvBnRelu(12, 36, kernel_size=3, stride=1),
+            _ConvBnRelu(in_ch, 64, kernel_size=3, stride=2),
+            _ConvBnRelu(64, 96, kernel_size=3, stride=1),
+            _ConvBnRelu(96, 64, kernel_size=3, stride=1),
+            _ConvBnRelu(64, 36, kernel_size=3, stride=1),
+
+            # _ConvBnRelu(in_ch, 36, kernel_size=3, stride=1),
+            # _ConvBnRelu(36, 12, kernel_size=3, stride=1),
+            # _ConvBnRelu(12, 36, kernel_size=3, stride=1),
         )
         self.stem6 = nn.Sequential(
-            _ConvBnRelu(in_ch, 36, kernel_size=3, stride=1),
-            _ConvBnRelu(36, 8, kernel_size=3, stride=1),
-            _ConvBnRelu(8, 36, kernel_size=3, stride=1),
+            _ConvBnRelu(in_ch, 32, kernel_size=3, stride=2),
+            _ConvBnRelu(32, 256, kernel_size=3, stride=1),
+            _ConvBnRelu(256, 36, kernel_size=3, stride=1),
+
+            # _ConvBnRelu(in_ch, 36, kernel_size=3, stride=1),
+            # _ConvBnRelu(36, 8, kernel_size=3, stride=1),
+            # _ConvBnRelu(8, 36, kernel_size=3, stride=1),
         )
         self.stem7 = nn.Sequential(
-            _ConvBnRelu(in_ch, 48, kernel_size=3, stride=1),
-            _ConvBnRelu(48, 8, kernel_size=3, stride=1),
-            _ConvBnRelu(8, 36, kernel_size=3, stride=1),
+            _ConvBnRelu(in_ch, 16, kernel_size=3, stride=2),
+            _ConvBnRelu(16, 48, kernel_size=3, stride=1),
+            _ConvBnRelu(48, 36, kernel_size=3, stride=1),
+
+            # _ConvBnRelu(in_ch, 48, kernel_size=3, stride=1),
+            # _ConvBnRelu(48, 8, kernel_size=3, stride=1),
+            # _ConvBnRelu(8, 36, kernel_size=3, stride=1),
         )
-        self.connect = 48
         self.stem8 = nn.Sequential(
+            _ConvBnRelu(in_ch, 16, kernel_size=3, stride=1),
+            _ConvBnRelu(16, 20, kernel_size=3, stride=1),
+            _ConvBnRelu(20, 20, kernel_size=3, stride=1),
+            _ConvBnRelu(20, 36, kernel_size=3, stride=1),
+
             # _ConvBnRelu(in_ch, 16, kernel_size=3, stride=1),
             # _ConvBnRelu(16, 24, kernel_size=3, stride=1),
             # _ConvBnRelu(24, self.connect, kernel_size=3, stride=1),
 
-            _ConvBnRelu(in_ch, 16, kernel_size=3, stride=1),
-            _ConvBnRelu(16, 16, kernel_size=3, stride=1),
-            _ConvBnRelu(16, 16, kernel_size=3, stride=1),
-            _ConvBnRelu(16, self.connect, kernel_size=3, stride=1),
+            # _ConvBnRelu(in_ch, 16, kernel_size=3, stride=1),
+            # _ConvBnRelu(16, 16, kernel_size=3, stride=1),
+            # _ConvBnRelu(16, 16, kernel_size=3, stride=1),
+            # _ConvBnRelu(16, self.connect, kernel_size=3, stride=1),
         )
 
 
@@ -417,9 +493,6 @@ class VoVNet(nn.Module):
             # _ConvBnRelu(8, 16, kernel_size=3, stride=1),
             # _ConvBnRelu(16, 24, kernel_size=3, stride=1),
             # _ConvBnRelu(24, 36, kernel_size=3, stride=1),  #63.0
-
-
-
         )
 
         # self.stem = GoogLeNetV4Stem()
@@ -495,7 +568,7 @@ class VoVNet(nn.Module):
 
 
 
-net = VoVNet(3, 100, head=8, model_type='vovnet19_0')
+net = VoVNet(3, 100, head=0, model_type='vovnet19_0')
 net = net.eval()
 with torch.no_grad():
     y = net(torch.rand(2, 3, 32, 32))

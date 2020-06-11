@@ -20,6 +20,8 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser(description='Evaluate the parameters and FLOPs of model')
     parser.add_argument('--arch', '-a', metavar='ARCH', default='VoVNet',
                         help='model architecture')
+    parser.add_argument('--model_type', default='vovnet19_0', type=str, help='model_type')
+    parser.add_argument('--head', default=8, type=int, help='head')
 
 
     global args
