@@ -26,7 +26,7 @@ parser.add_argument('--data', default='./data', type=str, metavar='N',
 parser.add_argument('--result', default='./Results',
                     type=str, metavar='N', help='root directory of results')
 #*********************************************************************
-parser.add_argument('--arch', '-a', metavar='ARCH', default='dutcvcnet',
+parser.add_argument('--arch', '-a', metavar='ARCH', default='VoVNet',
                     help='model architecture')
 # dutcvcnet
 # AlexNet_BN PeleeNet HBONet vovnet27_slim ghost_net MobileNetV3_Large VoVNet
@@ -52,9 +52,11 @@ parser.add_argument('--cuda', default=torch.cuda.is_available(), type=bool, help
 parser.add_argument('--adjust_lr', default='step_decrease', type=str, help='way to adjust lr')
 # step_decrease cosine warm_up
 #****************************************************************************
-parser.add_argument('--label_smooth', default=True, action='store_true', help='label_smooth')
+parser.add_argument('--label_smooth', default=False, action='store_true', help='label_smooth')
 # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-parser.add_argument('--task', default='add_label_smooth+CrossEntropy', type=str, help='task')
+parser.add_argument('--task', default='head_search', type=str, help='task')
+parser.add_argument('--model_type', default='vovnet19_0', type=str, help='model_type')
+parser.add_argument('--head', default=8, type=int, help='head')
 # vov_arch
 # parser.add_argument('--dropout', default=0.3, type=float,
 #                     help='dropout')
@@ -79,15 +81,18 @@ def main():
     # Model building
     print('=> Building model...')
     modeltype = globals()[args.arch]
-    model = modeltype(num_classes=args.num_classes)
+    # model = modeltype(num_classes=args.num_classes)
+    ######################################################################################
+    model = modeltype(num_classes=args.num_classes, head=args.head, model_type=args.model_type)
     # print(model)
 
+
     # compute the parameters and FLOPs of model
-    model_params_flops(args.arch)
+    model_params_flops(args.arch,args)
 
     # define loss function (criterion)
-    # criterion = nn.CrossEntropyLoss()
-    criterion = None
+    criterion = nn.CrossEntropyLoss()
+    # criterion = None
     criterion2 = None
 
     # optionally resume from a checkpoint
@@ -126,7 +131,7 @@ def main():
         model = nn.DataParallel(model).cuda()
         if args.label_smooth:
             criterion = LabelSmoothing(smoothing=0.15).cuda()
-            criterion2 = criterion.cuda()
+            # criterion2 = criterion.cuda()
             print('label smooth!')
         else:
             criterion = criterion.cuda()
@@ -219,8 +224,8 @@ def train(train_loader, model, criterion, optimizer, epoch, criterion2=None):
         output = model(input)
         # print(target.shape)
         loss = criterion(output, target)
-        ######################################################################
-        loss = 0.5*criterion(output, target) + 0.5*criterion2(output, target)
+        #####################################################################
+        # loss = 0.5*criterion(output, target) + 0.5*criterion2(output, target)
 
         # measure accuracy and record loss
         prec1, prec5 = accuracy(output, target, topk=(1, 5))

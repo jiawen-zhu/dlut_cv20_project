@@ -4,9 +4,9 @@ from thop import profile
 import torch
 
 
-def model_params_flops(arch):
+def model_params_flops(arch,args):
     print('==========================================================================')
-    model = globals()[arch]()
+    model = globals()[arch](head=args.head, model_type=args.model_type)
 
     input = torch.randn(1, 3, 32, 32)
     macs, params = profile(model, inputs=(input,))
@@ -20,7 +20,9 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser(description='Evaluate the parameters and FLOPs of model')
     parser.add_argument('--arch', '-a', metavar='ARCH', default='VoVNet',
                         help='model architecture')
+
+
     global args
     args = parser.parse_args()
-    model_params_flops(args.arch)
+    model_params_flops(args.arch, args)
 

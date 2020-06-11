@@ -12,6 +12,62 @@ __all__ = ['VoVNet']
 # enables ESE and identity connections here, nothing else changes.
 CONFIG = {
     # Introduced in V2. Difference is 3 repeats instead of 5 within each block.
+    "vovnet19_0": [
+        [3, 16, 1, 128, True],
+        [3, 16, 1, 128, False],
+        [3, 24, 1, 256, True],
+        [3, 32, 1, 256, False],
+        [3, 64, 3, 512, True],    #62.1 #63.4
+    ],
+    "vovnet19_1": [
+        [3, 16, 1, 128, True],
+        [3, 16, 1, 128, False],
+        [3, 24, 1, 256, True],
+        [3, 32, 1, 256, False],
+        [3, 64, 1, 512, True],
+    ],
+    "vovnet19_2": [
+        [3, 8, 1, 128, True],
+        [3, 8, 1, 128, False],
+        [3, 16, 1, 256, True],
+        [3, 32, 1, 256, False],
+        [3, 64, 1, 512, True],
+    ],
+    "vovnet19_3": [
+        [3, 8, 1, 128, True],
+        [3, 8, 1, 128, False],
+        [3, 16, 1, 256, True],
+        [3, 32, 1, 256, False],
+    ],
+    "vovnet19_4": [
+        [3, 8, 1, 128, True],
+        [3, 8, 1, 128, False],
+        [3, 16, 1, 256, True],
+        [3, 32, 1, 256, False],
+    ],
+    "vovnet19_5": [
+        [3, 8, 8, 512, True],
+    ],
+    "vovnet19_6": [
+        [3, 12, 3, 128, True],
+        [3, 24, 3, 256, True],
+        [3, 48, 3, 348, True],
+        [3, 64, 3, 512, True],
+    ],
+    "vovnet19_7": [
+        [3, 16, 1, 64, True],
+        [3, 16, 1, 64, False],
+        [3, 24, 1, 128, True],
+        [3, 32, 1, 128, False],
+        [3, 64, 3, 512, True],
+    ],
+    "vovnet19_8": [
+        [3, 16, 1, 64, True],
+        [3, 24, 1, 128, True],
+        [3, 64, 3, 512, True],
+    ],
+
+
     "vovnet19": [
         # kernel size, inner channels, layer repeats, output channels, downsample
 
@@ -87,10 +143,6 @@ CONFIG = {
         # [3, 16, 1, 128, False],
         # [3, 16, 1, 512, True],
         # [3, 8, 1, 1024, True],  #61.1 #62.1
-
-
-
-
     ],
     "vovnet27_slim": [
         [3, 64, 5, 128, True],
@@ -271,6 +323,7 @@ class VoVNet(nn.Module):
             model_type: str = "vovnet19",
             has_classifier: bool = True,
             dropout: float = 0.4,
+            head: int = 0,
     ):
 
         super().__init__()
@@ -281,6 +334,63 @@ class VoVNet(nn.Module):
         #     _ConvBnRelu(64, 64, kernel_size=3, stride=2),
         #     _ConvBnRelu(64, 96, kernel_size=3, stride=1),
         # )
+
+        self.head = head
+
+        self.stem0 = nn.Sequential(
+            _ConvBnRelu(in_ch, 16, kernel_size=3, stride=1),
+            _ConvBnRelu(16, 16, kernel_size=3, stride=1),
+            _ConvBnRelu(16, 24, kernel_size=3, stride=1),
+            _ConvBnRelu(24, 36, kernel_size=3, stride=1), #63.4
+        )
+        self.stem1 = nn.Sequential(
+            _ConvBnRelu(in_ch, 16, kernel_size=3, stride=1),
+            _ConvBnRelu(16, 24, kernel_size=3, stride=1),
+            _ConvBnRelu(24, 36, kernel_size=3, stride=1),
+        )
+        self.stem2 = nn.Sequential(
+            _ConvBnRelu(in_ch, 24, kernel_size=3, stride=1),
+            _ConvBnRelu(24, 24, kernel_size=3, stride=1),
+            _ConvBnRelu(24, 36, kernel_size=3, stride=1),
+        )
+        self.stem3 = nn.Sequential(
+            _ConvBnRelu(in_ch, 12, kernel_size=3, stride=1),
+            _ConvBnRelu(12, 24, kernel_size=3, stride=1),
+            _ConvBnRelu(24, 36, kernel_size=3, stride=1),
+        )
+        self.stem4 = nn.Sequential(
+            _ConvBnRelu(in_ch, 36, kernel_size=3, stride=1),
+            _ConvBnRelu(36, 24, kernel_size=3, stride=1),
+            _ConvBnRelu(24, 36, kernel_size=3, stride=1),
+        )
+        self.stem5 = nn.Sequential(
+            _ConvBnRelu(in_ch, 36, kernel_size=3, stride=1),
+            _ConvBnRelu(36, 12, kernel_size=3, stride=1),
+            _ConvBnRelu(12, 36, kernel_size=3, stride=1),
+        )
+        self.stem6 = nn.Sequential(
+            _ConvBnRelu(in_ch, 36, kernel_size=3, stride=1),
+            _ConvBnRelu(36, 8, kernel_size=3, stride=1),
+            _ConvBnRelu(8, 36, kernel_size=3, stride=1),
+        )
+        self.stem7 = nn.Sequential(
+            _ConvBnRelu(in_ch, 48, kernel_size=3, stride=1),
+            _ConvBnRelu(48, 8, kernel_size=3, stride=1),
+            _ConvBnRelu(8, 36, kernel_size=3, stride=1),
+        )
+        self.connect = 48
+        self.stem8 = nn.Sequential(
+            # _ConvBnRelu(in_ch, 16, kernel_size=3, stride=1),
+            # _ConvBnRelu(16, 24, kernel_size=3, stride=1),
+            # _ConvBnRelu(24, self.connect, kernel_size=3, stride=1),
+
+            _ConvBnRelu(in_ch, 16, kernel_size=3, stride=1),
+            _ConvBnRelu(16, 16, kernel_size=3, stride=1),
+            _ConvBnRelu(16, 16, kernel_size=3, stride=1),
+            _ConvBnRelu(16, self.connect, kernel_size=3, stride=1),
+        )
+
+
         self.stem = nn.Sequential(
             # _ConvBnRelu(in_ch, 48, kernel_size=3, stride=1),
             # _ConvBnRelu(48, 32, kernel_size=3, stride=1), #62.1
@@ -316,7 +426,7 @@ class VoVNet(nn.Module):
 
         body_layers = collections.OrderedDict()
         conf = CONFIG[model_type]
-        in_ch = 36
+        in_ch = self.connect
         for idx, block in enumerate(conf):
             kernel_size, inner_ch, repeats, out_ch, downsample = block
             body_layers[f"osa{idx}"] = _OSA(
@@ -341,7 +451,27 @@ class VoVNet(nn.Module):
         self._initialize_weights2()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        y = self.stem(x)
+        # y = self.stem(x)
+
+        if self.head == 0:
+            y = self.stem0(x)
+        elif self.head == 1:
+            y = self.stem1(x)
+        elif self.head == 2:
+            y = self.stem2(x)
+        elif self.head == 3:
+            y = self.stem3(x)
+        elif self.head == 4:
+            y = self.stem4(x)
+        elif self.head == 5:
+            y = self.stem5(x)
+        elif self.head == 6:
+            y = self.stem6(x)
+        elif self.head == 7:
+            y = self.stem7(x)
+        elif self.head == 8:
+            y = self.stem8(x)
+
         # print(y.shape)
         y = self.body(y)
         # print(y.shape)
@@ -365,8 +495,8 @@ class VoVNet(nn.Module):
 
 
 
-# net = VoVNet(3, 100)
-# net = net.eval()
-# with torch.no_grad():
-#     y = net(torch.rand(2, 3, 32, 32))
-#     print(list(y.shape))
+net = VoVNet(3, 100, head=8, model_type='vovnet19_0')
+net = net.eval()
+with torch.no_grad():
+    y = net(torch.rand(2, 3, 32, 32))
+    print(list(y.shape))
