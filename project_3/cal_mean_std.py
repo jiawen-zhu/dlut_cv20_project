@@ -21,6 +21,13 @@ targets = d['labels']
 data = np.dstack((data[:, :1024], data[:, 1024:2048], data[:, 2048:]))
 data = data.reshape((data.shape[0], 32, 32, 3))
 
+# count class
+count_num = [0]*100
+for i in range(len(targets)):
+    count_num[targets[i]]+=1
+print(count_num)
+
+
 red = data[:, :, :, 0]
 green = data[:, :, :, 1]
 blue = data[:, :, :, 2]

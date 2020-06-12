@@ -54,22 +54,26 @@ parser.add_argument('--adjust_lr', default='step_decrease', type=str, help='way 
 #****************************************************************************
 parser.add_argument('--label_smooth', default=False, action='store_true', help='label_smooth')
 # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-parser.add_argument('--task', default='baseline', type=str, help='task')
-parser.add_argument('--model_type', default='vovnet19_0', type=str, help='model_type')
+parser.add_argument('--task', default='neck_search', type=str, help='task')
+parser.add_argument('--model_type', default='vovnet19_1', type=str, help='model_type')
 parser.add_argument('--head', default=0, type=int, help='head')
+# parser.add_argument('--device', default=0, type=int, help='device')
 # vov_arch
-# parser.add_argument('--dropout', default=0.3, type=float,
-#                     help='dropout')
 best_prec1 = 0
 
 np.random.seed(3035)
 torch.manual_seed(3035)
 torch.cuda.manual_seed(3035)
 
+# torch.backends.cudnn.enabled = True
+
+
 def main():
     global args, best_prec1
     args = parser.parse_args()
     args.start_epoch = 0
+    global device
+    # device = torch.device('cuda:' + str(args.device))
     # mkdir a new folder to store the checkpoint and best model
 
     args.result = os.path.join(args.result, args.task + '_' + args.arch + '_lr_{}'.format(args.lr)
@@ -129,12 +133,16 @@ def main():
         # model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
         ########################################
         model = nn.DataParallel(model).cuda()
+        # model = nn.DataParallel(model).to(device)
+
         if args.label_smooth:
             criterion = LabelSmoothing(smoothing=0.15).cuda()
+            # criterion = LabelSmoothing(smoothing=0.15).to(device)
             # criterion2 = criterion.cuda()
             print('label smooth!')
         else:
             criterion = criterion.cuda()
+            # criterion = criterion.to(device)
         cudnn.benchmark = True
     else:
         print('CPU mode! Cuda is not available!')
@@ -219,6 +227,8 @@ def train(train_loader, model, criterion, optimizer, epoch, criterion2=None):
         if args.cuda:
             input = input.cuda(non_blocking=True)
             target = target.cuda(non_blocking=True)
+            # input = input.to(device)
+            # target = target.to(device)
 
         # compute output
         output = model(input)
@@ -272,6 +282,9 @@ def validate(val_loader, model, criterion):
             if args.cuda:
                 input = input.cuda(non_blocking=True)
                 target = target.cuda(non_blocking=True)
+                # input = input.to(device)
+                # target = target.to(device)
+
 
             # compute output
             output = model(input)
