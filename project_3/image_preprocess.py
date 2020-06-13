@@ -13,9 +13,9 @@ def train_val_transforms():
         You can modify the train_transforms to try different image preprocessing methods when training model
     """
     train_transforms = transforms.Compose([
-        # transforms.RandomResizedCrop((32, 32), scale=(0.8, 1.2)),
-        # transforms.RandomRotation(10),
-        # transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
+        transforms.RandomResizedCrop((32, 32), scale=(0.8, 1.2)),
+        transforms.RandomRotation(10),
+        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
         # transforms.RandomVerticalFlip(),
 
         transforms.RandomCrop(32, padding=4),

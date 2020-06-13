@@ -31,7 +31,7 @@ parser.add_argument('--arch', '-a', metavar='ARCH', default='dutcvcnet',
 # dutcvcnet VoVNet
 # AlexNet_BN PeleeNet HBONet vovnet27_slim ghost_net MobileNetV3_Large VoVNet
 parser.add_argument('--num-classes', default=100, type=int, help='define the number of classes')
-parser.add_argument('--epochs', default=140, type=int, metavar='N',
+parser.add_argument('--epochs', default=120, type=int, metavar='N',
                     help='number of total epochs to run')#140
 parser.add_argument('-b', '--batch-size', default=128, type=int, metavar='N',
                     help='mini-batch size (default: 128), used for train and validation')
@@ -55,7 +55,7 @@ parser.add_argument('--adjust_lr', default='step_decrease', type=str, help='way 
 #****************************************************************************
 parser.add_argument('--label_smooth', default=False, action='store_true', help='label_smooth')
 # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-parser.add_argument('--task', default='for pretrained', type=str, help='task')
+parser.add_argument('--task', default='step_decrease', type=str, help='task')
 # parser.add_argument('--model_type', default='vovnet19_1', type=str, help='model_type')
 # parser.add_argument('--head', default=0, type=int, help='head')
 # parser.add_argument('--device', default=0, type=int, help='device')
@@ -384,9 +384,9 @@ def adjust_learning_rate(optimizer, epoch, iterations_per_epoch=None, iteration=
         print(args.adjust_lr + ' learn rate policy ')
         if epoch < 100:  # 90
             lr = args.lr
-        elif epoch < 120:
+        elif epoch < 110:
             lr = args.lr * 0.1
-        elif epoch < 135:
+        elif epoch < 115:
             lr = args.lr * 0.01
         else:
             lr = args.lr * 0.001
