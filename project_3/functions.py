@@ -74,7 +74,7 @@ def plot_curve(stats, path, iserr):
     top1 = plt.subplot(1,3,2)
     top1.plot(range(1,epoch+1),trainTop1,'o-',label = 'train')
     top1.plot(range(1,epoch+1),valTop1,'o-',label = 'val')
-    plt.title('top1'+titleName+ ' best:' + str(round(max(valTop1),1)))
+    plt.title('top1'+titleName+ ' best:' + str(round(max(valTop1),2)))
     plt.xlabel('epoch')
     # top1.text(0, 0, 'best=53.01', fontsize=15)
     handles, labels = top1.get_legend_handles_labels()

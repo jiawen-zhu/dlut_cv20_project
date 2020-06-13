@@ -36,11 +36,12 @@ parser.add_argument('--epochs', default=120, type=int, metavar='N',
 parser.add_argument('-b', '--batch-size', default=128, type=int, metavar='N',
                     help='mini-batch size (default: 128), used for train and validation')
 # 128
+###############################################################
 parser.add_argument('--lr', '--learning-rate', default=0.2, type=float, metavar='LR',
                     help='initial learning rate') # 0.1
 # alex 0.1 pelee 0.18 pelee_adam 1e-4 vovnet27_slim 0.1(SGD) 1e-3(adam)
 parser.add_argument('--optimizer', default='SGD', type=str, metavar='M', help='optimization method')
-# SGD0.1 Adam1e-3 RMSprop0.01
+# SGD0.2 Adam1e-3 RMSprop0.01
 parser.add_argument('--print-freq', '-p', default=80, type=int, metavar='N',
                     help='print frequency (default: 10)')
 parser.add_argument('--save-freq', '-sp', default=40, type=int, metavar='N',
@@ -55,7 +56,7 @@ parser.add_argument('--adjust_lr', default='step_decrease', type=str, help='way 
 #****************************************************************************
 parser.add_argument('--label_smooth', default=False, action='store_true', help='label_smooth')
 # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-parser.add_argument('--task', default='step_decrease', type=str, help='task')
+parser.add_argument('--task', default='RandomRotation', type=str, help='task')
 # parser.add_argument('--model_type', default='vovnet19_1', type=str, help='model_type')
 # parser.add_argument('--head', default=0, type=int, help='head')
 # parser.add_argument('--device', default=0, type=int, help='device')
@@ -142,7 +143,7 @@ def main():
     if args.optimizer == 'SGD':
         optimizer = optim.SGD(model.parameters(), args.lr, momentum=0.9, weight_decay=1e-4)
     elif args.optimizer == 'Adam':
-        optimizer = optim.Adam(model.parameters(), args.lr)
+        optimizer = optim.Adam(model.parameters(), args.lr, weight_decay=1e-4)
     elif args.optimizer == 'RMSprop':
         optimizer = optim.RMSprop(model.parameters(), args.lr, alpha=0.9)
     else:
@@ -159,9 +160,9 @@ def main():
         # model = nn.DataParallel(model).to(device)
 
         if args.label_smooth:
-            criterion = LabelSmoothing(smoothing=0.15).cuda()
+            criterion = LabelSmoothing(smoothing=0.1).cuda()
             # criterion = LabelSmoothing(smoothing=0.15).to(device)
-            # criterion2 = criterion.cuda()
+            criterion2 = criterion.cuda()
             print('label smooth!')
         else:
             criterion = criterion.cuda()
@@ -257,7 +258,7 @@ def train(train_loader, model, criterion, optimizer, epoch, criterion2=None):
         output = model(input)
         # print(target.shape)
         loss = criterion(output, target)
-        #####################################################################
+        ###################################################################
         # loss = 0.5*criterion(output, target) + 0.5*criterion2(output, target)
 
         # measure accuracy and record loss
@@ -406,9 +407,9 @@ def adjust_learning_rate(optimizer, epoch, iterations_per_epoch=None, iteration=
             lr = args.lr * 0.001 * (10**epoch)
         elif epoch < 100:
             lr = args.lr
-        elif epoch < 120:
+        elif epoch < 110:
             lr = args.lr * 0.1
-        elif epoch < 135:
+        elif epoch < 115:
             lr = args.lr * 0.01
         else:
             lr = args.lr * 0.001

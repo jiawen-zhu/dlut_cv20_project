@@ -13,7 +13,7 @@ from image_preprocess import *
 parser = argparse.ArgumentParser(description='PyTorch ImageNet100_32*32 Evaluating')
 parser.add_argument('--data', default='./data', type=str, metavar='N',
                     help='root directory of dataset where directory train_data or val_data exists')
-parser.add_argument('--result', default='./Results/vov_arch_VoVNet_lr_0.2-06-10-23-06',
+parser.add_argument('--result', default='./Results/dlutcvc_log1',
                     type=str, metavar='N', help='root directory of results')
 parser.add_argument('--arch', '-a', metavar='ARCH', default='dutcvcnet',
                     help='model architecture')
@@ -21,7 +21,7 @@ parser.add_argument('--arch', '-a', metavar='ARCH', default='dutcvcnet',
 parser.add_argument('--num-classes', default=100, type=int,help='define the number of classes')
 parser.add_argument('-b', '--batch-size', default=128, type=int, metavar='N', help='mini-batch size (default: 128) used for test')
 parser.add_argument('--print-freq', '-p', default=10, type=int, metavar='N', help='print frequency (default: 10)')
-parser.add_argument('--model-dir', default='./Results/vov_arch_VoVNet_lr_0.2-06-10-23-06/model_best.pth.tar',
+parser.add_argument('--model-dir', default='./Results/dlutcvc_log1/model_best.pth.tar',
                     type=str, metavar='PATH', help='path to latest checkpoint (default: none)')
 parser.add_argument('--cuda', default=torch.cuda.is_available(), type=bool, help='whether cuda is in use.')
 
@@ -94,7 +94,7 @@ def validate(val_loader, model):
     model.eval()
     score = None
     ##################################################################################################################################
-    split_num = 8
+    split_num = 12
     score_temp = [0]*split_num
     max_temp = [0] * split_num
     with torch.no_grad():
