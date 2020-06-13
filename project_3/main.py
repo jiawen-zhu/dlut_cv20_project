@@ -26,9 +26,9 @@ parser.add_argument('--data', default='./data', type=str, metavar='N',
 parser.add_argument('--result', default='./Results',
                     type=str, metavar='N', help='root directory of results')
 #*********************************************************************
-parser.add_argument('--arch', '-a', metavar='ARCH', default='VoVNet',
+parser.add_argument('--arch', '-a', metavar='ARCH', default='dutcvcnet',
                     help='model architecture')
-# dutcvcnet
+# dutcvcnet VoVNet
 # AlexNet_BN PeleeNet HBONet vovnet27_slim ghost_net MobileNetV3_Large VoVNet
 parser.add_argument('--num-classes', default=100, type=int, help='define the number of classes')
 parser.add_argument('--epochs', default=140, type=int, metavar='N',
@@ -54,9 +54,9 @@ parser.add_argument('--adjust_lr', default='step_decrease', type=str, help='way 
 #****************************************************************************
 parser.add_argument('--label_smooth', default=False, action='store_true', help='label_smooth')
 # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-parser.add_argument('--task', default='neck_search', type=str, help='task')
-parser.add_argument('--model_type', default='vovnet19_1', type=str, help='model_type')
-parser.add_argument('--head', default=0, type=int, help='head')
+parser.add_argument('--task', default='baseline_head2', type=str, help='task')
+# parser.add_argument('--model_type', default='vovnet19_1', type=str, help='model_type')
+# parser.add_argument('--head', default=0, type=int, help='head')
 # parser.add_argument('--device', default=0, type=int, help='device')
 # vov_arch
 best_prec1 = 0
@@ -87,7 +87,8 @@ def main():
     modeltype = globals()[args.arch]
     # model = modeltype(num_classes=args.num_classes)
     ######################################################################################
-    model = modeltype(num_classes=args.num_classes, head=args.head, model_type=args.model_type)
+    # model = modeltype(num_classes=args.num_classes, head=args.head, model_type=args.model_type)
+    model = modeltype(num_classes=args.num_classes)
     # print(model)
 
 

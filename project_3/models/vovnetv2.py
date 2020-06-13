@@ -13,44 +13,29 @@ __all__ = ['VoVNet']
 CONFIG = {
     # Introduced in V2. Difference is 3 repeats instead of 5 within each block.
     "vovnet19_0": [
-        [3, 16, 1, 128, True],
-        [3, 16, 1, 128, False],
-        [3, 24, 1, 256, True],
-        [3, 32, 1, 256, False],
-        [1, 64, 3, 512, True], #    65.2
-    ],
-    "vovnet19_1": [
-        # [3, 16, 2, 128, True],
-        # [3, 24, 5, 256, True],
-        # [1, 64, 3, 512, True], # 65.4
+        [3, 16, 5, 128, True],
+        [3, 24, 8, 384, True],
+        [1, 64, 2, 512, True] #66.2
 
-        # [3, 16, 5, 128, True],
-        # [3, 24, 5, 256, True],
-        # [1, 64, 3, 512, True], #65.9
-
-        # [3, 16, 7, 128, True],
-        # [3, 24, 5, 384, True],
-        # [1, 64, 3, 512, True]  #65.9
-
-        # [3, 16, 5, 128, True],
+        # [3, 16, 8, 128, True],
         # [3, 24, 8, 384, True],
         # [1, 64, 2, 512, True] #66.2
-
-        [3, 16, 8, 128, True],
-        [3, 24, 8, 384, True],
-        [1, 64, 2, 512, True]
+    ],
+    "vovnet19_1": [
+        [3, 32, 5, 128, True],
+        [3, 32, 5, 256, True],
+        [1, 48, 3, 384, True]   #66.2
     ],
     "vovnet19_2": [
-
+        [3, 16, 5, 128, True],
+        [3, 24, 8, 384, True],
+        [1, 64, 5, 512, True]   #66.2
     ],
     "vovnet19_3": [
-
     ],
     "vovnet19_4": [
-
     ],
     "vovnet19_5": [
-
     ],
     "vovnet19_6": [
 
@@ -65,47 +50,11 @@ CONFIG = {
 
     "vovnet19": [
         # kernel size, inner channels, layer repeats, output channels, downsample
-
-        # [3, 16, 1, 96, True],
-        # [3, 16, 1, 96, False],
-        # [3, 32, 1, 384, True],
-        # [3, 32, 1, 384, False],       #61.1 #61.7
-
-        # [3, 16, 5, 128, True],
-        # [3, 32, 5, 256, True],
-        # [3, 96, 5, 512, True],        # 61.9 #63.3
-
         [3, 16, 1, 128, True],
         [3, 16, 1, 128, False],
         [3, 24, 1, 256, True],
         [3, 32, 1, 256, False],
         [3, 64, 3, 512, True],    #62.1 #63.4
-
-        # [3, 4, 1, 128, True],
-        # [3, 4, 2, 128, False],
-        # [3, 8, 1, 256, True],
-        # [3, 8, 1, 256, False],
-        # [3, 16, 1, 512, True],
-        # [3, 16, 1, 512, False],
-        # [3, 16, 1, 512, False],       61.0
-
-        # [3, 16, 2, 128, True],
-        # [3, 32, 2, 512, True],
-        # [3, 64, 2, 1024, True],     60.6
-
-        # [3, 8, 1, 128, True],
-        # [3, 16, 1, 128, False],
-        # [3, 24, 1, 256, True],
-        # [3, 24, 1, 256, False],
-        # [3, 32, 1, 512, True],
-        # [3, 16, 1, 512, False], #61.7 #63.4
-
-        # [3, 4, 1, 128, True],
-        # [3, 8, 1, 128, False],
-        # [3, 16, 1, 128, True],
-        # [3, 16, 1, 128, False],
-        # [3, 16, 1, 512, True],
-        # [3, 8, 1, 1024, True],  #61.1 #62.1
     ],
     "vovnet27_slim": [
         [3, 64, 5, 128, True],
@@ -404,17 +353,36 @@ class VoVNet(nn.Module):
             SKUnit(24, 36, 32, 2, 6, 2, stride=1),
             nn.ReLU(),
             SKUnit(36, 64, 32, 2, 8, 2, stride=1),
-            nn.ReLU()     #65.2
+            nn.ReLU()     #66.2
         )
 
         self.stem1 = nn.Sequential(
-
+            _ConvBnRelu(in_ch, 16, kernel_size=3, stride=1),
+            SKUnit(16, 24, 32, 2, 6, 2, stride=1),
+            nn.ReLU(),
+            SKUnit(24, 24, 32, 2, 6, 2, stride=1),
+            nn.ReLU(),
+            SKUnit(24, 36, 32, 2, 6, 2, stride=1),
+            nn.ReLU(),
+            SKUnit(36, 64, 32, 2, 8, 2, stride=1),
+            nn.ReLU()   #66.2
         )
         self.stem2 = nn.Sequential(
-
+            _ConvBnRelu(in_ch, 36, kernel_size=3, stride=1),
+            SKUnit(36, 64, 32, 2, 16, 2, stride=1),
+            SKUnit(64, 64, 32, 2, 16, 2, stride=1),
+            nn.ReLU(),  #65.2
         )
         self.stem3 = nn.Sequential(
-
+            _ConvBnRelu(in_ch, 24, kernel_size=3, stride=1),
+            SKUnit(24, 24, 32, 2, 6, 2, stride=1),
+            nn.ReLU(),
+            SKUnit(24, 24, 32, 2, 6, 2, stride=1),
+            nn.ReLU(),
+            SKUnit(24, 36, 32, 2, 9, 2, stride=1),
+            nn.ReLU(),
+            SKUnit(36, 64, 32, 2, 16, 2, stride=1),
+            nn.ReLU()   #65.8
         )
         self.stem4 = nn.Sequential(
 
@@ -513,7 +481,7 @@ class VoVNet(nn.Module):
 
 
 
-# net = VoVNet(3, 100, head=0, model_type='vovnet19_1')
+# net = VoVNet(3, 100, head=1, model_type='vovnet19_0')
 # net = net.eval()
 # with torch.no_grad():
 #     y = net(torch.rand(2, 3, 32, 32))

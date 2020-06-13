@@ -15,7 +15,7 @@ parser.add_argument('--data', default='./data', type=str, metavar='N',
                     help='root directory of dataset where directory train_data or val_data exists')
 parser.add_argument('--result', default='./Results/vov_arch_VoVNet_lr_0.2-06-10-23-06',
                     type=str, metavar='N', help='root directory of results')
-parser.add_argument('--arch', '-a', metavar='ARCH', default='VoVNet',
+parser.add_argument('--arch', '-a', metavar='ARCH', default='dutcvcnet',
                     help='model architecture')
 # AlexNet_BN dutcvcnet
 parser.add_argument('--num-classes', default=100, type=int,help='define the number of classes')

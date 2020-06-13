@@ -6,7 +6,8 @@ import torch
 
 def model_params_flops(arch,args):
     print('==========================================================================')
-    model = globals()[arch](head=args.head, model_type=args.model_type)
+    # model = globals()[arch](head=args.head, model_type=args.model_type)
+    model = globals()[arch]()
 
     input = torch.randn(1, 3, 32, 32)
     macs, params = profile(model, inputs=(input,))
@@ -18,10 +19,11 @@ def model_params_flops(arch,args):
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser(description='Evaluate the parameters and FLOPs of model')
-    parser.add_argument('--arch', '-a', metavar='ARCH', default='VoVNet',
+    parser.add_argument('--arch', '-a', metavar='ARCH', default='dutcvcnet',
                         help='model architecture')
-    parser.add_argument('--model_type', default='vovnet19_1', type=str, help='model_type')
-    parser.add_argument('--head', default=0, type=int, help='head')
+    # VoVNet
+    # parser.add_argument('--model_type', default='vovnet19_5', type=str, help='model_type')
+    # parser.add_argument('--head', default=0, type=int, help='head')
 
 
     global args
