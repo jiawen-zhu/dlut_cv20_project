@@ -47,6 +47,7 @@ parser.add_argument('--save-freq', '-sp', default=40, type=int, metavar='N',
                     help='save checkpoint frequency (default: 10)')
 parser.add_argument('--resume', default='',
                     type=str, metavar='PATH', help='path to latest checkpoint (default: none)')
+parser.add_argument('--pretrained', default=True, action='store_true', help='pretrained')
 # ./Results/AlexNet_BN_lr_0.1/checkpoint_10.pth.tar
 parser.add_argument('--cuda', default=torch.cuda.is_available(), type=bool, help='whether cuda is in use.')
 parser.add_argument('--adjust_lr', default='step_decrease', type=str, help='way to adjust lr')
@@ -54,7 +55,7 @@ parser.add_argument('--adjust_lr', default='step_decrease', type=str, help='way 
 #****************************************************************************
 parser.add_argument('--label_smooth', default=False, action='store_true', help='label_smooth')
 # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-parser.add_argument('--task', default='baseline_head2', type=str, help='task')
+parser.add_argument('--task', default='for pretrained', type=str, help='task')
 # parser.add_argument('--model_type', default='vovnet19_1', type=str, help='model_type')
 # parser.add_argument('--head', default=0, type=int, help='head')
 # parser.add_argument('--device', default=0, type=int, help='device')
@@ -115,6 +116,27 @@ def main():
             print("=> loaded checkpoint '{}' (epoch {})".format(args.resume, checkpoint['epoch']))
         else:
             print("=> no checkpoint found at '{}'".format(args.resume))
+
+    if args.pretrained:
+        pretrained_path0 = './pretrained_model/vovnet19-72.03-top1.pt'
+        if os.path.isfile(pretrained_path0):
+            print('=> pretrained_model ')
+            if args.cuda:
+                pretrained_model = torch.load(pretrained_path0)
+            else:
+                pretrained_model = torch.load(pretrained_path0, map_location=torch.device('cpu'))
+            model_dict = model.state_dict()
+
+            # for k, v in pretrained_model.items():
+            #     if k in model_dict and model_dict[k].size()==v.size():
+            #         print(k)
+
+            pretrained_dict = {k: v for k, v in pretrained_model.items() if
+                               k in model_dict and model_dict[k].size()==v.size()}  # filter out unnecessary keys
+            model_dict.update(pretrained_dict)
+            model.load_state_dict(model_dict, strict=False)
+        else:
+            print("=> no pretrained_model found at ")
 
     # define optimizer
     if args.optimizer == 'SGD':

@@ -173,21 +173,9 @@ class SKUnit(nn.Module):
 CONFIG = {
     "dutcvcnet": [
         # kernel size, inner channels, layer repeats, output channels, downsample
-        [3, 16, 5, 128, True],
+        [3, 16, 8, 128, True],
         [3, 24, 8, 384, True],
-        [1, 64, 2, 512, True]  # 66.2
-
-        # [3, 16, 8, 128, True],
-        # [3, 24, 8, 384, True],
-        # [1, 64, 2, 512, True] #66.2
-
-        # [3, 32, 5, 128, True],
-        # [3, 32, 5, 256, True],
-        # [1, 48, 3, 384, True]  # 66.2
-
-        # [3, 16, 5, 128, True],
-        # [3, 24, 8, 384, True],
-        # [1, 64, 5, 512, True]  # 66.2
+        [1, 64, 2, 512, True] # neck 66.4
     ],
 }
 
@@ -204,25 +192,15 @@ class dutcvcnet(nn.Module):
         super().__init__()
 
         self.stem = nn.Sequential(
-            # _ConvBnRelu(in_ch, 24, kernel_size=3, stride=1),
-            # SKUnit(24, 24, 32, 2, 6, 2, stride=1),
-            # nn.ReLU(),
-            # SKUnit(24, 24, 32, 2, 6, 2, stride=1),
-            # nn.ReLU(),
-            # SKUnit(24, 36, 32, 2, 6, 2, stride=1),
-            # nn.ReLU(),
-            # SKUnit(36, 64, 32, 2, 8, 2, stride=1),
-            # nn.ReLU()     #66.2 head1
-
-            _ConvBnRelu(in_ch, 16, kernel_size=3, stride=1),
-            SKUnit(16, 24, 32, 2, 6, 2, stride=1),
+            _ConvBnRelu(in_ch, 24, kernel_size=3, stride=1),
+            SKUnit(24, 24, 32, 2, 6, 2, stride=1),
             nn.ReLU(),
             SKUnit(24, 24, 32, 2, 6, 2, stride=1),
             nn.ReLU(),
             SKUnit(24, 36, 32, 2, 6, 2, stride=1),
             nn.ReLU(),
             SKUnit(36, 64, 32, 2, 8, 2, stride=1),
-            nn.ReLU()  # 66.2 head2
+            nn.ReLU()     #66.4 head
         )
 
         body_layers = collections.OrderedDict()
