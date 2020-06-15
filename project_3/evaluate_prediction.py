@@ -13,15 +13,15 @@ from image_preprocess import *
 parser = argparse.ArgumentParser(description='PyTorch ImageNet100_32*32 Evaluating')
 parser.add_argument('--data', default='./data', type=str, metavar='N',
                     help='root directory of dataset where directory train_data or val_data exists')
-parser.add_argument('--result', default='./Results/dlutcvc_log1',
-                    type=str, metavar='N', help='root directory of results')
 parser.add_argument('--arch', '-a', metavar='ARCH', default='dutcvcnet',
                     help='model architecture')
 # AlexNet_BN dutcvcnet
 parser.add_argument('--num-classes', default=100, type=int,help='define the number of classes')
+parser.add_argument('--result', default='./Results/dlutcvc_log2',
+                    type=str, metavar='N', help='root directory of results')
 parser.add_argument('-b', '--batch-size', default=128, type=int, metavar='N', help='mini-batch size (default: 128) used for test')
 parser.add_argument('--print-freq', '-p', default=10, type=int, metavar='N', help='print frequency (default: 10)')
-parser.add_argument('--model-dir', default='./Results/dlutcvc_log1/model_best.pth.tar',
+parser.add_argument('--model-dir', default='./Results/dlutcvc_log2/model_best.pth.tar',
                     type=str, metavar='PATH', help='path to latest checkpoint (default: none)')
 parser.add_argument('--cuda', default=torch.cuda.is_available(), type=bool, help='whether cuda is in use.')
 
@@ -63,13 +63,9 @@ def main():
     # Data loading and preprocessing
     print('=> loading imagenet100 data...')
 
-    test_dataset = ImageNet100_Test(
-        root=args.data,
-        transform=test_transforms())
-    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=args.batch_size,
-                                              shuffle=False, num_workers=2)
+
     # get prediction
-    score = validate(test_loader, model)
+    score = validate(model)
     if args.cuda:
         score = score.cpu()
 
@@ -81,26 +77,49 @@ def main():
     print('Writing scores to test_prediction.csv.......')
     csv_file = os.path.join(args.result, 'test_prediction.csv')
     imgs = []
-    for i in range(len(test_dataset)):
+    # for i in range(len(test_dataset)):
+    for i in range(30000):
         imgs.append('%d.png'%i)
     dataframe =pd.DataFrame({'Id': imgs, 'Prediction': pred})
     dataframe.to_csv(csv_file, index=False)
     print('Done!')
 
+    score = score.numpy()
+    # write scores to a csv file
+    print('Wrinting scores to test_score.csv.......')
+    csv_file = os.path.join(args.result, 'test_score.csv')
+    imgs = []
+    for i in range(30000):
+        imgs.append('%d.png'%i)
+    dataframe =pd.DataFrame(score, index=imgs,
+                            columns=['score_%d'%i for i in range(args.num_classes)])
+    dataframe.to_csv(csv_file)
+    print('Done!')
 
-def validate(val_loader, model):
+
+def validate(model):
     batch_time = AverageMeter()
     # switch to evaluate mode
     model.eval()
     score = None
     ##################################################################################################################################
-    split_num = 12
+    split_num = 2 #16
     score_temp = [0]*split_num
     max_temp = [0] * split_num
     with torch.no_grad():
         # end = time.time()
         for j in range(split_num):
-            for i, (input, index) in enumerate(val_loader):
+            # if j == 0:
+            #     test_trans = test_transforms_ori()
+            # else:
+            test_trans = test_transforms()
+
+            test_dataset = ImageNet100_Test(
+                root=args.data,
+                transform=test_trans)
+            test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=args.batch_size,
+                                                      shuffle=False, num_workers=2)
+            for i, (input, index) in enumerate(test_loader):
                 if args.cuda:
                     input = input.cuda(non_blocking=True)
                 if len(input.size()) > 4:  # 5-D tensor
@@ -127,26 +146,33 @@ def validate(val_loader, model):
 
             max_temp[j]= torch.max(score_temp[j],1)[0]
 
-        cat_max_temp = None
+
+        ###########################################################mean********
+        cat_score_temp = None
         for k in range(split_num):
             if k ==0:
-                cat_max_temp = torch.reshape( max_temp[k], (1, 30000))
+                cat_score_temp = torch.reshape(score_temp[k], (1, 30000, 100))
             else:
-                cat_max_temp = torch.cat([cat_max_temp, torch.reshape( max_temp[k], (1, 30000))], dim=0)
+                cat_score_temp = torch.cat([cat_score_temp, torch.reshape(score_temp[k], (1, 30000, 100))], dim=0)
+        score = cat_score_temp.mean(0)
+        #######################################################
 
 
-
-
-        # for i in range(30000):
-        #     for j in range(8):
-
-        index = torch.max(cat_max_temp, 0)[1]
-        for l in range(30000):
-            if l == 0:
-                score = torch.reshape( score_temp[index[l]][l], (1, 100))
-            else:
-                score = torch.cat([score, torch.reshape( score_temp[index[l]][l], (1, 100))], dim=0)
-
+##########################################################################max
+        # cat_max_temp = None
+        # for k in range(split_num):
+        #     if k ==0:
+        #         cat_max_temp = torch.reshape( max_temp[k], (1, 30000))
+        #     else:
+        #         cat_max_temp = torch.cat([cat_max_temp, torch.reshape( max_temp[k], (1, 30000))], dim=0)
+        #
+        # index = torch.max(cat_max_temp, 0)[1]
+        # for l in range(30000):
+        #     if l == 0:
+        #         score = torch.reshape( score_temp[index[l]][l], (1, 100))
+        #     else:
+        #         score = torch.cat([score, torch.reshape( score_temp[index[l]][l], (1, 100))], dim=0)
+######################################################################
 
 
 

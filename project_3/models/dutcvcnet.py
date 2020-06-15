@@ -3,6 +3,7 @@ import torch
 import math
 from torch import nn
 
+# __all__ = ['dutcvcnet', '_ESE']
 __all__ = ['dutcvcnet']
 
 
@@ -192,6 +193,16 @@ class dutcvcnet(nn.Module):
         super().__init__()
 
         self.stem = nn.Sequential(
+            # _ConvBnRelu(in_ch, 24, kernel_size=3, stride=1),
+            # SKUnit(24, 24, 32, 2, 6, 2, stride=1),
+            # nn.ReLU(),
+            # SKUnit(24, 24, 32, 2, 6, 2, stride=1),
+            # nn.ReLU(),
+            # SKUnit(24, 36, 32, 2, 6, 2, stride=1),
+            # nn.ReLU(),
+            # SKUnit(36, 64, 32, 2, 8, 2, stride=1),
+            # nn.ReLU()     #baseline
+
             _ConvBnRelu(in_ch, 24, kernel_size=3, stride=1),
             SKUnit(24, 24, 32, 2, 6, 2, stride=1),
             nn.ReLU(),
@@ -199,8 +210,10 @@ class dutcvcnet(nn.Module):
             nn.ReLU(),
             SKUnit(24, 36, 32, 2, 6, 2, stride=1),
             nn.ReLU(),
+            SKUnit(36, 36, 32, 2, 6, 2, stride=1),
+            nn.ReLU(),
             SKUnit(36, 64, 32, 2, 8, 2, stride=1),
-            nn.ReLU()     #66.4 head
+            nn.ReLU()
         )
 
         body_layers = collections.OrderedDict()

@@ -31,13 +31,13 @@ parser.add_argument('--arch', '-a', metavar='ARCH', default='dutcvcnet',
 # dutcvcnet VoVNet
 # AlexNet_BN PeleeNet HBONet vovnet27_slim ghost_net MobileNetV3_Large VoVNet
 parser.add_argument('--num-classes', default=100, type=int, help='define the number of classes')
-parser.add_argument('--epochs', default=120, type=int, metavar='N',
+parser.add_argument('--epochs', default=130, type=int, metavar='N',
                     help='number of total epochs to run')#140
 parser.add_argument('-b', '--batch-size', default=128, type=int, metavar='N',
                     help='mini-batch size (default: 128), used for train and validation')
 # 128
 ###############################################################
-parser.add_argument('--lr', '--learning-rate', default=0.2, type=float, metavar='LR',
+parser.add_argument('--lr', '--learning-rate', default=0.25, type=float, metavar='LR',
                     help='initial learning rate') # 0.1
 # alex 0.1 pelee 0.18 pelee_adam 1e-4 vovnet27_slim 0.1(SGD) 1e-3(adam)
 parser.add_argument('--optimizer', default='SGD', type=str, metavar='M', help='optimization method')
@@ -55,8 +55,15 @@ parser.add_argument('--adjust_lr', default='step_decrease', type=str, help='way 
 # step_decrease cosine warm_up
 #****************************************************************************
 parser.add_argument('--label_smooth', default=False, action='store_true', help='label_smooth')
+parser.add_argument('--diff_lr', default=True, action='store_true', help='diff_lr')
+parser.add_argument('--smooth_index', default=0.1, type=float, metavar='smooth_index',
+                    help='')
+parser.add_argument('--dropout', default=0.35, type=float, metavar='dropout',
+                    help='')
+parser.add_argument('--weight_decay', default=1e-4, type=float, metavar='weight_decay',
+                    help='')
 # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-parser.add_argument('--task', default='RandomRotation', type=str, help='task')
+parser.add_argument('--task', default='debug', type=str, help='task')
 # parser.add_argument('--model_type', default='vovnet19_1', type=str, help='model_type')
 # parser.add_argument('--head', default=0, type=int, help='head')
 # parser.add_argument('--device', default=0, type=int, help='device')
@@ -90,12 +97,17 @@ def main():
     # model = modeltype(num_classes=args.num_classes)
     ######################################################################################
     # model = modeltype(num_classes=args.num_classes, head=args.head, model_type=args.model_type)
-    model = modeltype(num_classes=args.num_classes)
+    model = modeltype(num_classes=args.num_classes, dropout=args.dropout)
     # print(model)
 
 
     # compute the parameters and FLOPs of model
     model_params_flops(args.arch,args)
+    ###############################################
+    print('lr:', args.lr)
+    print('dropout:', args.dropout)
+    print('smooth_index', args.smooth_index)
+    print('weight_decay', args.weight_decay)
 
     # define loss function (criterion)
     criterion = nn.CrossEntropyLoss()
@@ -139,9 +151,32 @@ def main():
         else:
             print("=> no pretrained_model found at ")
 
+
+###############select para
+    stem_params = list(map(id, model.stem.parameters()))
+    body_params = list(map(id, model.body.parameters()))
+    # classifier
+    classifier_params = filter(lambda p: id(p) not in stem_params + body_params,
+                         model.parameters())
+#################################################
+
     # define optimizer
     if args.optimizer == 'SGD':
-        optimizer = optim.SGD(model.parameters(), args.lr, momentum=0.9, weight_decay=1e-4)
+        if args.diff_lr:
+            #################### different lr
+            optimizer = optim.SGD(
+                [
+                    {'params': classifier_params},
+                    {'params': model.stem.parameters(), 'lr': args.lr * 0.5},
+                    {'params': model.body.parameters(), 'lr': args.lr * 0.75},
+                ],
+                lr=args.lr,
+                momentum=0.9,
+                weight_decay=args.weight_decay)
+            #############################################################
+        else:
+            optimizer = optim.SGD(model.parameters(), args.lr, momentum=0.9, weight_decay=args.weight_decay)
+
     elif args.optimizer == 'Adam':
         optimizer = optim.Adam(model.parameters(), args.lr, weight_decay=1e-4)
     elif args.optimizer == 'RMSprop':
@@ -160,9 +195,9 @@ def main():
         # model = nn.DataParallel(model).to(device)
 
         if args.label_smooth:
-            criterion = LabelSmoothing(smoothing=0.1).cuda()
+            criterion = LabelSmoothing(smoothing=args.smooth_index).cuda()
             # criterion = LabelSmoothing(smoothing=0.15).to(device)
-            criterion2 = criterion.cuda()
+            # criterion2 = criterion.cuda()
             print('label smooth!')
         else:
             criterion = criterion.cuda()
@@ -387,10 +422,13 @@ def adjust_learning_rate(optimizer, epoch, iterations_per_epoch=None, iteration=
             lr = args.lr
         elif epoch < 110:
             lr = args.lr * 0.1
+            # lr = args.lr / 10.0
         elif epoch < 115:
             lr = args.lr * 0.01
+            # lr = args.lr / 10.0 / 10.0
         else:
             lr = args.lr * 0.001
+            # lr = args.lr / 10.0 / 10.0 / 5.0
         for param_group in optimizer.param_groups:
             param_group['lr'] = lr
     elif args.adjust_lr == 'cosine':
@@ -432,6 +470,40 @@ def accuracy(output, target, topk=(1,)):
             correct_k = correct[:k].view(-1).float().sum(0, keepdim=True)
             res.append(correct_k.mul_(100.0 / batch_size))
         return res
+
+############# XXXXXXXXXXXXXX TODO
+def get_parameters(model, bias=False):
+    modules_skipped = (
+        nn.ReLU,
+        nn.MaxPool2d,
+        nn.Dropout2d,
+        nn.Sequential,
+        nn.Linear,
+        nn.Flatten,
+        nn.Dropout,
+        nn.AdaptiveAvgPool2d,
+
+    )
+    for m in model.modules():
+        if isinstance(m, nn.Conv2d):
+            if bias:
+                # print('goodddddddddd')
+                yield m.bias
+            else:
+                print('goodddddddddd')
+                yield m.weight
+        elif isinstance(m, nn.ConvTranspose2d):
+            # weight is frozen because it is just a bilinear upsampling
+            if bias:
+                assert m.bias is None
+        elif isinstance(m, modules_skipped):
+            continue
+        else:
+            print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+            print(m)
+            continue
+            # raise ValueError('Unexpected module: %s' % str(m))
+
 
 
 if __name__ == '__main__':
