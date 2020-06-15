@@ -14,5 +14,7 @@ cv class
 
 ### project_3
   图像分类
+  
   数据集：ImageNet-1K中随机100类，降采样到32*32
+  
   要求：模型参数量<2.5M，运算量<50MFLOAPs
